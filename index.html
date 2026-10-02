@@ -47,14 +47,19 @@
         html { scroll-behavior: smooth; }
         [x-cloak] { display: none !important; }
 
+        html { overflow-x: hidden; width: 100%; }
         body {
             background: var(--bg);
             color: var(--cream);
             font-family: 'Plus Jakarta Sans', sans-serif;
+            width: 100%;
             overflow-x: hidden;
             scroll-behavior: smooth;
             -webkit-tap-highlight-color: transparent;
         }
+        /* belt-and-suspenders: stops any rotated / negative-margin element (e.g. the marquee)
+           from ever showing a sliver past the screen edge on mobile browsers */
+        html, body { overflow-x: clip; }
 
         .font-display {
             font-family: 'Dela Gothic One', 'Arial Black', Impact, sans-serif;
@@ -155,10 +160,11 @@
            ========================================================= */
         .loader {
             position: fixed; inset: 0; z-index: 200000;
+            width: 100vw; height: 100vh; height: 100dvh; /* 100dvh keeps it centred as mobile browser toolbars show/hide */
             background: var(--yellow);
             background-image: repeating-conic-gradient(#ffd23f 0% 25%, var(--yellow) 0% 50%);
             background-size: 84px 84px;
-            display: grid; place-items: center;
+            display: flex; align-items: center; justify-content: center;
             animation: loaderOut .75s cubic-bezier(.7,0,.2,1) 1.1s forwards;
         }
         .loader-in { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
@@ -274,8 +280,9 @@
             padding: 7.5rem 1.25rem 13rem; overflow: hidden; isolation: isolate;
         }
         .hero-oval {
+            /* a true circle on every screen: capped by whichever is smaller, viewport width or height */
             position: absolute; z-index: -1; left: 50%; top: 46%;
-            width: min(90vw, 1000px); height: min(50vh, 420px);
+            width: min(90vw, 60vh, 1000px); height: min(90vw, 60vh, 1000px);
             transform: translate(-50%, -58%);
             background: var(--pink); border-radius: 50%;
             box-shadow: 0 0 0 6px rgba(255,255,255,.12);
@@ -338,9 +345,13 @@
         .glove-wrap { position: absolute; left: 50%; bottom: 26%; width: 56%; margin-left: -28%; }
         .glove-wrap .mascot { width: 100%; }
 
-        /* marquee strip */
+        /* marquee strip — full-bleed via the calc(-50vw + 50%) technique, which (unlike -3vw
+           negative margins) can never overshoot the real viewport edge on any mobile browser */
         .marquee {
-            position: relative; z-index: 3; margin: -2rem -3vw 0; padding: .9rem 0; overflow: hidden;
+            position: relative; z-index: 3; left: 50%; right: 50%;
+            margin-left: calc(-50vw + 2px); margin-right: calc(-50vw + 2px); margin-top: -2rem;
+            width: 100vw; max-width: 100vw; box-sizing: border-box;
+            padding: .9rem 0; overflow: hidden;
             background: var(--orange); border-block: 4px solid var(--ink); box-shadow: 0 8px 0 var(--ink);
             transform: rotate(-1.6deg);
         }
@@ -664,17 +675,24 @@
         .sup-handle:hover { transform: scale(1.12); }
         .sup-card.is-dragging { cursor: grabbing; will-change: transform; transition: none !important; box-shadow: 0 24px 46px rgba(8,4,30,.5), 8px 8px 0 var(--ink); }
         .sup-card.is-dragging .sup-handle { opacity: 1; cursor: grabbing; }
+        /* a quick, lively "pop" the instant a card is picked up, and a soft glow-settle the instant it's dropped —
+           purely cosmetic (box-shadow/filter only) so they never fight with the drag code's own transform tracking */
+        .sup-card.is-picking-up { animation: pickupPop .18s cubic-bezier(.3,1.4,.4,1); }
+        .sup-card.is-dropping { animation: dropSettle .36s ease-out; }
+        @keyframes pickupPop {
+            0% { filter: brightness(1); box-shadow: 8px 8px 0 var(--ink); }
+            40% { filter: brightness(1.12); box-shadow: 0 20px 36px rgba(8,4,30,.45), 8px 8px 0 var(--ink); }
+            100% { filter: brightness(1); box-shadow: 0 24px 46px rgba(8,4,30,.5), 8px 8px 0 var(--ink); }
+        }
+        @keyframes dropSettle {
+            0% { box-shadow: 0 24px 46px rgba(8,4,30,.5), 8px 8px 0 var(--ink); }
+            55% { box-shadow: 5px 5px 0 var(--ink); }
+            100% { box-shadow: 8px 8px 0 var(--ink); }
+        }
         /* smooth padding/avatar-size changes when a card enters or leaves the featured slot */
         .sup-card { transition: transform .25s cubic-bezier(.2,.9,.3,1.5), box-shadow .25s, padding .3s ease, border-radius .3s ease; }
         .sup-avatar { transition: width .3s ease, height .3s ease; }
         .sup-nef { cursor: pointer; }
-        .sup-yt {
-            display: inline-flex; align-items: center; gap: .4rem; margin-top: .5rem;
-            font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
-            color: var(--ink); background: var(--cream); border: 2px solid var(--ink); border-radius: 999px;
-            padding: .35rem .7rem; box-shadow: 2px 2px 0 var(--ink); transition: transform .15s;
-        }
-        .sup-yt:hover { transform: translateY(-2px); }
         .sup-hint { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; opacity: .75; margin-top: -.2rem; }
 
         /* 🌟 NEF — normal card size, but the most eye-catching one: gold sunburst, glowing frame, shine sweep, sparkles + floating notes */
@@ -1041,7 +1059,7 @@
                 <h2 id="win-title" class="font-display stack-title st-md mb-6">Secret Found!</h2>
                 <div class="mb-7 overflow-hidden rounded-2xl border-4 border-[#16112e] bg-[#ffe8f1] aspect-video flex items-center justify-center shadow-[4px_4px_0_#16112e]">
                     <!-- ✏️ EDIT: victory image -->
-                    <img src="https://drive.google.com/thumbnail?sz=w1000&id=14VAR-BbzfQHN5TMHvHc6ihVw6WLpWRsi" alt="Matty celebrating" class="w-full h-full object-contain">
+                    <img src="images/victory.jpg" alt="Matty celebrating" class="w-full h-full object-contain">
                 </div>
                 <div class="space-y-1 mb-8">
                     <p class="text-lg font-semibold">Matty's real age is...</p>
@@ -1224,7 +1242,7 @@
                             <template x-if="v.crown"><span class="sup-crown" aria-hidden="true">👑</span></template>
                             <div class="sup-pic">
                                 <span class="sup-initial" aria-hidden="true" x-text="(v.name || '?').charAt(0).toUpperCase()"></span>
-                                <img :src="v.img" :alt="v.name + ' — profile picture'" loading="lazy" decoding="async" @error="$el.remove()">
+                                <template x-if="v.img"><img :src="v.img" :alt="v.name + ' — profile picture'" loading="lazy" decoding="async" @error="$el.remove()"></template>
                             </div>
                             <span class="sup-badge" aria-hidden="true" x-text="v.badge || '⭐'"></span>
                         </div>
@@ -1232,12 +1250,9 @@
                             <template x-if="v.ribbon"><span class="sup-ribbon" x-text="v.ribbon"></span></template>
                             <h3 class="sup-name" x-text="v.name"></h3>
                             <p class="sup-desc" x-text="v.desc"></p>
-                            <!-- 🎶 Nef's card plays a little jingle + confetti when tapped (see playNefSong() in the JS) -->
+                            <!-- 🎶 tap anywhere on Nef's card (except the drag handle) to play songs/everythingIsAwesome.mp3 — see playNefSong() in the JS -->
                             <template x-if="v.theme === 'nef'">
-                                <div>
-                                    <p class="sup-hint">🎧 Tap this card</p>
-                                    <a href="https://www.youtube.com/results?search_query=Everything+Is+Awesome+The+Lego+Movie+Song" target="_blank" rel="noopener noreferrer" class="sup-yt" @click.stop><i class="fab fa-youtube" aria-hidden="true"></i> Hear the real song</a>
-                                </div>
+                                <p class="sup-hint">🎧 Tap this card to play the song</p>
                             </template>
                         </div>
                     </article>
@@ -1316,27 +1331,28 @@
            To REMOVE someone: delete their whole line.
            ========================================================================= */
         const SUPPORTERS = [
-            // ⚠️ every img below is a placeholder: replace it with a real https:// photo link
+            // 🖼  img: '' means "no photo yet" — the card then shows a neat circle with the supporter's first letter instead.
+            //     To add a real photo: put the file in images/ and set  img: 'images/filename.jpg'
             // The ORDER of this list = the ORDER on the page — WHOEVER IS FIRST becomes the big full-width card.
             // (Visitors can also drag cards around live on the page — this list is just the starting order.)
 
             // ⭐ position #1 = the BIG card that takes a full row
-            { name: 'Gregdub',          desc: 'He really believes he could beat Matty in literally anything 🐐',      img: 'https//google.com', theme: 'goat',        badge: '🐐', crown: true, ribbon: '★ Top Supporter' },
+            { name: 'Gregdub',          desc: 'He really believes he could beat Matty in literally anything 🐐',      img: '', theme: 'goat',        badge: '🐐', crown: true, ribbon: '★ Top Supporter' },
 
-            // 🌟 SPECIAL supporter = normal size but gold, glowing and sparkling (theme: 'nef' + sparkle: true) — tap his card to play a little jingle!
-            { name: 'Nef', desc: 'He love this song "EVERYTHING IS AWESOME🎶"', img: 'https//google.com', theme: 'nef', badge: '🎶', sparkle: true },
+            // 🌟 SPECIAL supporter = normal size but gold, glowing and sparkling (theme: 'nef' + sparkle: true) — tap his card to play the song!
+            { name: 'Nef', desc: 'He love this song "EVERYTHING IS AWESOME🎶"', img: 'images/nef.jpg', theme: 'nef', badge: '🎶', sparkle: true },
 
             // ⬇️ REGULAR supporters — add new lines here
-            { name: 'c.o.s.m.o',        desc: 'Nobody has ever seen him offline — legend says he simply never left 🪐',     img: 'https//google.com', theme: 'cosmo',       badge: '🪐' },
-            { name: 'chad',             desc: 'He walks in like the room was built just for him 👑',                        img: 'https//google.com', theme: 'chad',        badge: '👑' },
-            { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: 'https//google.com', theme: 'honda',       badge: '🩺' },
-            { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: 'https//google.com', theme: 'moudir',      badge: '🎬' },
-            { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: 'https//google.com', theme: 'bandar',      badge: '🍭' },
-            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: 'https//google.com', theme: 'lobo',        badge: '💚' },
-            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: 'https//google.com', theme: 'carlos',      badge: '🪙' },
-            { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: 'https//google.com', theme: 'aiden',       badge: '🏆' },
-            { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: 'https//google.com', theme: 'christopher', badge: '🌸' },
-            { name: 'Shawn',            desc: 'He can turn any random Tuesday into main character energy 🎧',              img: 'https//google.com', theme: 'auto',        badge: '🎧' }
+            { name: 'c.o.s.m.o',        desc: 'Nobody has ever seen him offline — legend says he simply never left 🪐',     img: '', theme: 'cosmo',       badge: '🪐' },
+            { name: 'chad',             desc: 'He walks in like the room was built just for him 👑',                        img: '', theme: 'chad',        badge: '👑' },
+            { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
+            { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
+            { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
+            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
+            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
+            { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
+            { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
+            { name: 'Shawn',            desc: 'He can turn any random Tuesday into main character energy 🎧',              img: '', theme: 'auto',        badge: '🎧' }
             // ➕ paste new supporters ABOVE this line (and add a comma after the previous supporter's  }  )
         ];
 
@@ -1348,7 +1364,7 @@
         function supportersBoard() {
             return {
                 supporters: SUPPORTERS,
-                _dragName: null, _grabX: 0, _grabY: 0,
+                _dragName: null, _grabX: 0, _grabY: 0, _raf: null, _reordering: false, _lastEvt: null, _dragCard: null, _dragGrid: null,
 
                 // called when the user presses down on a card's 🖐 handle
                 startDrag(e, i) {
@@ -1362,22 +1378,31 @@
                     const r = card.getBoundingClientRect();
                     this._grabX = e.clientX - r.left;
                     this._grabY = e.clientY - r.top;
-                    card.classList.add('is-dragging');
+                    card.classList.add('is-dragging', 'is-picking-up');
                     card.style.zIndex = 60;
-                    const move = (ev) => this._dragMove(ev, card, grid);
-                    const stop = () => { this._endDrag(card); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); };
+                    setTimeout(() => card.classList.remove('is-picking-up'), 180); // little "pop" as it lifts off
+                    const move = (ev) => { this._lastEvt = ev; this._dragCard = card; this._dragGrid = grid; this._scheduleFrame(); };
+                    const stop = () => { this._raf && cancelAnimationFrame(this._raf); this._raf = null; this._endDrag(card); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); };
                     window.addEventListener('pointermove', move);
                     window.addEventListener('pointerup', stop);
                     window.addEventListener('pointercancel', stop);
                 },
-                // follows the pointer, and live-swaps whichever card is currently underneath
-                _dragMove(e, card, grid) {
-                    if (!this._dragName) return;
+                // batches pointer updates to one per animation frame, for perfectly smooth tracking
+                _scheduleFrame() {
+                    if (this._raf) return;
+                    this._raf = requestAnimationFrame(() => { this._raf = null; this._dragFrame(); });
+                },
+                // follows the pointer every frame; only CHECKS for a card-swap once the previous swap has fully settled,
+                // so fast drags never trigger two overlapping reorder-animations at once (that overlap was the "glitchy" feeling)
+                _dragFrame() {
+                    const e = this._lastEvt, card = this._dragCard, grid = this._dragGrid;
+                    if (!this._dragName || !e || !card || !grid) return;
                     const gridRect = grid.getBoundingClientRect();
                     const desiredX = e.clientX - gridRect.left - this._grabX;
                     const desiredY = e.clientY - gridRect.top - this._grabY;
                     const dx = desiredX - card.offsetLeft, dy = desiredY - card.offsetTop;
-                    card.style.transform = `translate(${dx}px, ${dy}px) scale(1.045)`;
+                    card.style.transform = `translate(${dx}px, ${dy}px) scale(1.045) rotate(${Math.max(-6, Math.min(6, dx * .04))}deg)`;
+                    if (this._reordering) return;
 
                     card.style.pointerEvents = 'none';
                     const under = document.elementFromPoint(e.clientX, e.clientY);
@@ -1387,7 +1412,9 @@
                     const from = this.supporters.findIndex(s => s.name === this._dragName);
                     const to = this.supporters.findIndex(s => s.name === overCard.dataset.name);
                     if (from === -1 || to === -1 || from === to) return;
+                    this._reordering = true;
                     this._reorder(grid, card, from, to);
+                    setTimeout(() => { this._reordering = false; }, 300);
                 },
                 // moves the item in the data array, then smoothly slides every OTHER card into its new spot (FLIP technique)
                 _reorder(grid, dragEl, from, to) {
@@ -1411,40 +1438,33 @@
                         });
                     });
                 },
-                // called on release: snap the dragged card cleanly into its final slot
+                // called on release: a soft springy drop into the final slot, with a little settle animation
                 _endDrag(card) {
-                    this._dragName = null;
-                    card.classList.remove('is-dragging');
+                    this._dragName = null; this._lastEvt = null; this._dragCard = null; this._dragGrid = null;
+                    card.classList.remove('is-dragging', 'is-picking-up');
+                    card.classList.add('is-dropping');
                     card.style.zIndex = '';
-                    card.style.transition = 'transform .25s ease';
+                    card.style.transition = 'transform .34s cubic-bezier(.34,1.56,.64,1)';
                     card.style.transform = '';
-                    setTimeout(() => { card.style.transition = ''; }, 260);
+                    setTimeout(() => { card.style.transition = ''; card.classList.remove('is-dropping'); }, 360);
                 },
 
-                // 🎶 Nef's card: confetti + a short original celebratory jingle (not the licensed track itself — see the "Hear the real song" link for that)
+                // 🎶 Nef's card: confetti + the real song (tap anywhere on the card, except the drag handle)
                 playNefSong() {
                     const root = window.Alpine && window.Alpine.$data ? window.Alpine.$data(document.body) : null;
                     if (root && root.showToast) root.showToast('🎶 Everything Is Awesome! 🎶');
                     cf({ particleCount: 130, spread: 100, startVelocity: 45, colors: ['#ffc61a', '#ff7a2f', '#f9c6dc', '#43b9ea', '#fff6e6'], origin: { y: .6 } });
-                    this._playJingle();
+                    this._playSong();
                 },
-                _playJingle() {
+                // ✏️ the audio file lives at  songs/everythingIsAwesome.mp3  — swap that path if you rename or move it
+                _playSong() {
                     try {
-                        const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
-                        if (!window._mattyActx) window._mattyActx = new Ctx();
-                        const ctx = window._mattyActx; const now = ctx.currentTime;
-                        const notes = [523.25, 659.25, 783.99, 1046.5]; // a bright original 4-note arpeggio — not a reproduction of any copyrighted melody
-                        notes.forEach((f, i) => {
-                            const o = ctx.createOscillator(); const g = ctx.createGain();
-                            o.type = 'triangle'; o.frequency.value = f;
-                            const t0 = now + i * 0.14;
-                            g.gain.setValueAtTime(0, t0);
-                            g.gain.linearRampToValueAtTime(0.2, t0 + 0.02);
-                            g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
-                            o.connect(g); g.connect(ctx.destination);
-                            o.start(t0); o.stop(t0 + 0.34);
-                        });
-                    } catch (err) { /* Web Audio unavailable — the confetti + toast still play */ }
+                        if (!window._nefAudio) { window._nefAudio = new Audio('songs/everythingIsAwesome.mp3'); window._nefAudio.preload = 'auto'; }
+                        const a = window._nefAudio;
+                        a.currentTime = 0;
+                        const p = a.play();
+                        if (p && p.catch) p.catch(() => {}); // ignore if the browser briefly blocks playback
+                    } catch (err) { /* audio file missing or unsupported — confetti + toast still play */ }
                 }
             };
         }
@@ -1637,15 +1657,19 @@
                 initGalleryScroll() {
                     // ✏️ EDITABLE: gallery photos, titles and captions
                     const galleryData = [
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1OoEH_-X7ffMqdribdUi_4cI0bcjv5nte', title: 'The Aura', desc: 'A presence that commands the room.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1998L1OkwwTOHF7wo--Y0J5-cXZ4lOyCr', title: 'Artist Soul', desc: 'Creativity flowing through every move.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1z4BbrwYTWo6wp3A0lfKHJvG8gWwfueBJ', title: 'Gym Life', desc: 'Dedication in every single rep.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1e5SynS3oBgMzyBqBejtLxVQpGel4DALn', title: 'Cute Essence', desc: 'The charm that never fades.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1-uFVkH5aYDZzpJMo8DnANxmIK099hnoz', title: 'Model Vibes', desc: 'Stepping into the spotlight.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1vaqx2y4ke-bAhV9Lg_l-5IAFJpbZhsvF', title: 'Matcha Lover', desc: 'Finding peace in a cup of green.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1SV-T_Bo11Sq1kcQdO18HNy08a-P8z-ne', title: 'Birthday Cake', desc: 'Celebrating another year of elite energy.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1umC2U6qpPxP5xOchuMzijKeC3bu6Ibg_', title: 'Feeling Sleepy', desc: 'Even legends need their rest.' },
-                        { url: 'https://drive.google.com/thumbnail?sz=w1000&id=1wI4acENGWbZJrqQMDkP2AtQT2GVODlTW', title: 'Foodie Moment', desc: 'Good food, better company.' }
+                        // ✏️ EDIT: put new photos in the images/ folder and add/remove lines here — title + desc are shown on the card
+                        { url: 'images/aura.jpg',          title: 'The Aura',        desc: 'A presence that commands the room.' },
+                        { url: 'images/artist-soul.jpg',   title: 'Artist Soul',     desc: 'Creativity flowing through every move.' },
+                        { url: 'images/gym-life.jpg',      title: 'Gym Life',        desc: 'Dedication in every single rep.' },
+                        { url: 'images/cute-essence.jpg',  title: 'Cute Essence',    desc: 'The charm that never fades.' },
+                        { url: 'images/model-vibes.jpg',   title: 'Model Vibes',     desc: 'Stepping into the spotlight.' },
+                        { url: 'images/matcha-lover.jpg',  title: 'Matcha Lover',    desc: 'Finding peace in a cup of green.' },
+                        { url: 'images/birthday-cake.jpg', title: 'Birthday Cake',   desc: 'Celebrating another year of elite energy.' },
+                        { url: 'images/foodie-moment.jpg', title: 'Foodie Moment',   desc: 'Good food, better company.' },
+                        { url: 'images/coffeeTime.jpg',    title: 'Coffee Time',     desc: 'Slow sips, big thoughts.' },
+                        { url: 'images/memoryWall.jpg',    title: 'Memory Wall',     desc: 'Every photo tells its own story.' },
+                        { url: 'images/shopping.jpg',      title: 'Shopping Spree',  desc: 'Retail therapy, elite style.' },
+                        { url: 'images/snipeTime.jpg',     title: 'Snipe Time',      desc: 'Locked in, one shot at a time.' }
                     ];
 
                     // shown if a photo can't be loaded (e.g. Drive sharing not set to "anyone with the link")
