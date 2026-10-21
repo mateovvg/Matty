@@ -279,16 +279,22 @@
            To swap an image, just change its background-image url below
            (search for .char-<name> classes).
            ========================================================= */
-        .char-card {
+        /* ✏️ CHARACTER CUTOUTS — true transparent-background art (no card frame),
+           so each one reads as part of the scene instead of a sticker stuck on top.
+           Structure: .char-parallax (positioned anchor, moved by scroll via JS) >
+           .char-card (the image itself: gentle idle float + a soft drop-shadow for depth). */
+        .char-parallax {
             position: absolute;
-            width: clamp(78px, 11vw, 168px);
-            aspect-ratio: 640 / 853;
-            border: 4px solid var(--ink);
-            border-radius: 20px;
-            box-shadow: 6px 6px 0 var(--ink);
-            background: var(--cream) center/cover no-repeat;
             z-index: 4;
             pointer-events: none;
+            will-change: transform;
+        }
+        .char-card {
+            display: block;
+            width: clamp(100px, 14vw, 210px);
+            aspect-ratio: 3 / 4;
+            background: center/contain no-repeat;
+            filter: drop-shadow(0 10px 14px rgba(22, 17, 46, .35));
             animation: charFloat 5.5s ease-in-out infinite;
             transform: rotate(var(--r, -4deg));
         }
@@ -297,7 +303,7 @@
             50% { transform: rotate(var(--r, -4deg)) translateY(-10px); }
         }
         @media (max-width: 767px) {
-            .char-card { width: clamp(58px, 17vw, 96px); box-shadow: 4px 4px 0 var(--ink); border-width: 3px; }
+            .char-card { width: clamp(72px, 21vw, 125px); filter: drop-shadow(0 6px 8px rgba(22, 17, 46, .32)); }
         }
         /* anchor wrapper: lets a character "lean" outside a card that itself
            clips its own corners (overflow:hidden), without breaking that clip */
@@ -312,49 +318,49 @@
            lands on top of text or buttons, on phone, tablet or desktop alike. */
         .char-lean {
             /* leans on the bottom-right corner of the "About" card */
-            background-image: url('images/characters/char-lean.jpg');
-            right: clamp(-100px, -8vw, -20px);
-            bottom: clamp(-130px, -11vw, -24px);
+            right: clamp(-90px, -7vw, -16px);
+            bottom: clamp(-110px, -9vw, -16px);
         }
+        .char-lean .char-card { background-image: url('images/characters/char-lean.png'); }
         .char-point-up {
             /* sits just under the "Matty Vibes" title, pointing up at it */
-            background-image: url('images/characters/char-point-up.jpg');
             left: clamp(-8px, 1vw, 12px);
             top: 100%;
-            margin-top: clamp(-18px, -2vw, -4px);
+            margin-top: clamp(-10px, -1vw, 4px);
         }
+        .char-point-up .char-card { background-image: url('images/characters/char-point-up.png'); }
         .char-lookdown {
             /* sits between the "Best Moments" title and the photo wall, looking down into it */
-            background-image: url('images/characters/char-lookdown.jpg');
             right: clamp(-8px, 1vw, 16px);
             top: 100%;
-            margin-top: clamp(-14px, -1.6vw, -2px);
+            margin-top: clamp(-6px, -0.6vw, 6px);
         }
+        .char-lookdown .char-card { background-image: url('images/characters/char-lookdown.png'); }
         .char-toast {
             /* raises a toast just above the "VIP Supporters" title */
-            background-image: url('images/characters/char-toast.jpg');
             right: clamp(-4px, 1vw, 20px);
             bottom: 100%;
-            margin-bottom: clamp(-14px, -1.6vw, -2px);
+            margin-bottom: clamp(-6px, -0.6vw, 6px);
         }
+        .char-toast .char-card { background-image: url('images/characters/char-toast.png'); }
         .char-shoulder {
             /* peeks in from the top-left corner of the supporters grid */
-            background-image: url('images/characters/char-shoulder.jpg');
-            left: clamp(-56px, -6vw, -24px);
+            left: clamp(-50px, -5vw, -16px);
             top: clamp(4px, 1.4vw, 20px);
         }
+        .char-shoulder .char-card { background-image: url('images/characters/char-shoulder.png'); }
         .char-point-side {
             /* points at the play buttons from the bottom-right corner of the card */
-            background-image: url('images/characters/char-point-side.jpg');
-            right: clamp(-44px, -6vw, -18px);
+            right: clamp(-38px, -5vw, -12px);
             bottom: clamp(10px, 2vw, 28px);
         }
+        .char-point-side .char-card { background-image: url('images/characters/char-point-side.png'); }
         .char-heart {
             /* sends love from the top-right corner of the footer */
-            background-image: url('images/characters/char-heart.jpg');
             right: clamp(8px, 3vw, 40px);
             top: clamp(8px, 3vw, 32px);
         }
+        .char-heart .char-card { background-image: url('images/characters/char-heart.png'); }
 
         /* =========================================================
            HERO
@@ -1228,7 +1234,7 @@
                     </div>
                 </article>
                 <!-- ✏️ character art: leaning on the "about" card -->
-                <div class="char-card char-lean" style="--r:-6deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-lean"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div>
             </div>
             <div class="age-card-live" data-aos="fade-left">
                 <svg class="spark" style="left:8%;top:12%" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
@@ -1270,7 +1276,7 @@
                 <h2 id="vibes-title" class="stack-title st-lg">Matty Vibes</h2>
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">Six little worlds, one big personality</p>
                 <!-- ✏️ character art: pointing up at the "Matty Vibes" title -->
-                <div class="char-card char-point-up" style="--r:4deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-point-up"><div class="char-card" style="--r:4deg;" aria-hidden="true"></div></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 <div data-aos="fade-up"><article class="vibe-card tilt" style="--c:var(--pink)"><span class="vibe-no">NO.01</span><div class="vibe-ic" aria-hidden="true">🎨</div><h3 class="vibe-t">Artist Soul</h3><p class="vibe-d">Creativity flowing through every move.</p></article></div>
@@ -1289,7 +1295,7 @@
                 <h2 id="gallery-title" class="stack-title st-lg">Best Moments</h2>
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase opacity-70">Tap any photo for a closer look ✨</p>
                 <!-- ✏️ character art: leaning over, looking down into the photo wall -->
-                <div class="char-card char-lookdown" style="--r:7deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-lookdown"><div class="char-card" style="--r:7deg;" aria-hidden="true"></div></div>
             </div>
 
             <!-- ✏️ EDIT: gallery photos live in the GALLERY list near the top of the <script> at the bottom of this file -->
@@ -1334,7 +1340,7 @@
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">The legends who keep Matty's world spinning</p>
                 <p class="mt-4 font-bold text-[10px] tracking-[0.25em] uppercase opacity-60">🖐 Grab the corner handle to drag and reorder any card</p>
                 <!-- ✏️ character art: raising a toast to the VIP Supporters -->
-                <div class="char-card char-toast" style="--r:-5deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-toast"><div class="char-card" style="--r:-5deg;" aria-hidden="true"></div></div>
             </div>
             <div class="sup-grid" data-aos="fade-up">
                 <template x-for="(v, i) in supporters" :key="v.name">
@@ -1375,7 +1381,7 @@
                     </article>
                 </template>
                 <!-- ✏️ character art: peeking in from the side of the supporters grid -->
-                <div class="char-card char-shoulder" style="--r:5deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-shoulder"><div class="char-card" style="--r:5deg;" aria-hidden="true"></div></div>
             </div>
         </section>
 
@@ -1394,7 +1400,7 @@
                     </div>
                 </div>
                 <!-- ✏️ character art: pointing at the play buttons -->
-                <div class="char-card char-point-side" style="--r:-6deg;" aria-hidden="true"></div>
+                <div class="char-parallax char-point-side"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div>
             </div>
         </section>
 
@@ -1415,7 +1421,7 @@
         <svg class="foot-mascot" style="left:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-daisy"/></svg>
         <svg class="foot-mascot" style="right:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-sun"/></svg>
         <!-- ✏️ character art: sending love to everyone reading this far -->
-        <div class="char-card char-heart" style="--r:-4deg;" aria-hidden="true"></div>
+        <div class="char-parallax char-heart"><div class="char-card" style="--r:-4deg;" aria-hidden="true"></div></div>
     </footer>
 
     <script>
@@ -1828,6 +1834,35 @@
                     });
                     el.addEventListener('pointerleave', () => { el.style.transform = ''; });
                 });
+            }
+
+            /* ✏️ CHARACTER CUTOUTS — a light scroll parallax so each character feels
+               like part of the scene (not a static sticker). Every card moves a few
+               pixels against the scroll, proportional to how far its own anchor is
+               from the centre of the screen. Skips entirely for reduced-motion. */
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const charEls = document.querySelectorAll('.char-parallax');
+            if (!reduceMotion && charEls.length) {
+                let ticking = false;
+                const SPEED = 0.12; // how strongly each card drifts vs. normal scroll
+                const MAX_SHIFT = 46; // px — keeps the drift subtle, never wild
+                const updateParallax = () => {
+                    ticking = false;
+                    const vh = window.innerHeight;
+                    const vCenter = vh / 2;
+                    charEls.forEach((el) => {
+                        const r = el.getBoundingClientRect();
+                        const elCenter = r.top + r.height / 2;
+                        let shift = (vCenter - elCenter) * SPEED;
+                        if (shift > MAX_SHIFT) shift = MAX_SHIFT;
+                        if (shift < -MAX_SHIFT) shift = -MAX_SHIFT;
+                        el.style.transform = `translateY(${shift.toFixed(1)}px)`;
+                    });
+                };
+                const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(updateParallax); } };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                window.addEventListener('resize', onScroll);
+                updateParallax();
             }
         });
     </script>
