@@ -287,11 +287,14 @@
             position: absolute;
             z-index: 4;
             pointer-events: none;
-            will-change: transform;
         }
+        /* the JS parallax scroll-effect only ever touches THIS element's transform —
+           never the outer .char-parallax anchor, so centering / flip-above positioning
+           set on the anchor is never overwritten */
+        .char-parallax-track { display: block; will-change: transform; }
         .char-card {
             display: block;
-            width: clamp(100px, 14vw, 210px);
+            width: clamp(90px, 10vw, 160px);
             aspect-ratio: 3 / 4;
             background: center/contain no-repeat;
             filter: drop-shadow(0 10px 14px rgba(22, 17, 46, .35));
@@ -323,17 +326,21 @@
         }
         .char-lean .char-card { background-image: url('images/characters/char-lean.png'); }
         .char-point-up {
-            /* sits just under the "Matty Vibes" title, pointing up at it */
-            left: clamp(-8px, 1vw, 12px);
-            top: 100%;
-            margin-top: clamp(-10px, -1vw, 4px);
+            /* sits centred in the open gap ABOVE the "Matty Vibes" title — full size, clearly visible,
+               clear of both the card above it and the title below it (see the extra top padding
+               added to #vibes below, which exists purely to give this card its own clean space) */
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -100%);
+            margin-top: clamp(-14px, -1.4vw, -4px);
         }
         .char-point-up .char-card { background-image: url('images/characters/char-point-up.png'); }
         .char-lookdown {
-            /* sits between the "Best Moments" title and the photo wall, looking down into it */
-            right: clamp(-8px, 1vw, 16px);
-            top: 100%;
-            margin-top: clamp(-6px, -0.6vw, 6px);
+            /* sits centred in the open gap ABOVE the "Best Moments" title — same idea as char-point-up */
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -100%);
+            margin-top: clamp(-10px, -1vw, 2px);
         }
         .char-lookdown .char-card { background-image: url('images/characters/char-lookdown.png'); }
         .char-toast {
@@ -356,9 +363,12 @@
         }
         .char-point-side .char-card { background-image: url('images/characters/char-point-side.png'); }
         .char-heart {
-            /* sends love from the top-right corner of the footer */
-            right: clamp(8px, 3vw, 40px);
-            top: clamp(8px, 3vw, 32px);
+            /* a normal (non-absolute) element, centred in its own clear space inside the
+               footer — guaranteed never to overlap the title/text above or the mascots below */
+            position: static;
+            display: flex;
+            justify-content: center;
+            margin: clamp(2rem, 7vw, 3.5rem) auto 0;
         }
         .char-heart .char-card { background-image: url('images/characters/char-heart.png'); }
 
@@ -1234,7 +1244,7 @@
                     </div>
                 </article>
                 <!-- ✏️ character art: leaning on the "about" card -->
-                <div class="char-parallax char-lean"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div>
+                <div class="char-parallax char-lean"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div></div>
             </div>
             <div class="age-card-live" data-aos="fade-left">
                 <svg class="spark" style="left:8%;top:12%" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
@@ -1271,12 +1281,12 @@
         </section>
 
         <!-- Showcase cards -->
-        <section id="vibes" aria-labelledby="vibes-title">
+        <section id="vibes" aria-labelledby="vibes-title" style="position:relative; margin-top: clamp(170px, 22vw, 340px);">
+            <!-- ✏️ character art: sits in the open gap above this section, pointing up at the title — never over the title or the cards below it -->
+            <div class="char-parallax char-point-up"><div class="char-parallax-track"><div class="char-card" style="--r:4deg;" aria-hidden="true"></div></div></div>
             <div class="text-center mb-14 md:mb-20" data-aos="zoom-out" style="position:relative">
                 <h2 id="vibes-title" class="stack-title st-lg">Matty Vibes</h2>
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">Six little worlds, one big personality</p>
-                <!-- ✏️ character art: pointing up at the "Matty Vibes" title -->
-                <div class="char-parallax char-point-up"><div class="char-card" style="--r:4deg;" aria-hidden="true"></div></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 <div data-aos="fade-up"><article class="vibe-card tilt" style="--c:var(--pink)"><span class="vibe-no">NO.01</span><div class="vibe-ic" aria-hidden="true">🎨</div><h3 class="vibe-t">Artist Soul</h3><p class="vibe-d">Creativity flowing through every move.</p></article></div>
@@ -1288,14 +1298,14 @@
             </div>
         </section>
 
-        <section id="gallery" aria-labelledby="gallery-title" x-data="{ lightbox: null }" @keydown.escape.window="lightbox = null">
+        <section id="gallery" aria-labelledby="gallery-title" x-data="{ lightbox: null }" @keydown.escape.window="lightbox = null" style="position:relative; margin-top: clamp(170px, 22vw, 340px);">
+            <!-- ✏️ character art: sits in the open gap above this section, looking down toward the photo wall — never over the title or the photos below it -->
+            <div class="char-parallax char-lookdown"><div class="char-parallax-track"><div class="char-card" style="--r:7deg;" aria-hidden="true"></div></div></div>
             <div class="text-center mb-14 md:mb-20 relative" data-aos="zoom-out">
                 <svg class="spark" style="left:8%;top:-6px" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
                 <svg class="spark" style="right:10%;top:10px;animation-delay:.7s" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
                 <h2 id="gallery-title" class="stack-title st-lg">Best Moments</h2>
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase opacity-70">Tap any photo for a closer look ✨</p>
-                <!-- ✏️ character art: leaning over, looking down into the photo wall -->
-                <div class="char-parallax char-lookdown"><div class="char-card" style="--r:7deg;" aria-hidden="true"></div></div>
             </div>
 
             <!-- ✏️ EDIT: gallery photos live in the GALLERY list near the top of the <script> at the bottom of this file -->
@@ -1340,7 +1350,7 @@
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">The legends who keep Matty's world spinning</p>
                 <p class="mt-4 font-bold text-[10px] tracking-[0.25em] uppercase opacity-60">🖐 Grab the corner handle to drag and reorder any card</p>
                 <!-- ✏️ character art: raising a toast to the VIP Supporters -->
-                <div class="char-parallax char-toast"><div class="char-card" style="--r:-5deg;" aria-hidden="true"></div></div>
+                <div class="char-parallax char-toast"><div class="char-parallax-track"><div class="char-card" style="--r:-5deg;" aria-hidden="true"></div></div></div>
             </div>
             <div class="sup-grid" data-aos="fade-up">
                 <template x-for="(v, i) in supporters" :key="v.name">
@@ -1381,7 +1391,7 @@
                     </article>
                 </template>
                 <!-- ✏️ character art: peeking in from the side of the supporters grid -->
-                <div class="char-parallax char-shoulder"><div class="char-card" style="--r:5deg;" aria-hidden="true"></div></div>
+                <div class="char-parallax char-shoulder"><div class="char-parallax-track"><div class="char-card" style="--r:5deg;" aria-hidden="true"></div></div></div>
             </div>
         </section>
 
@@ -1400,7 +1410,7 @@
                     </div>
                 </div>
                 <!-- ✏️ character art: pointing at the play buttons -->
-                <div class="char-parallax char-point-side"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div>
+                <div class="char-parallax char-point-side"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div></div>
             </div>
         </section>
 
@@ -1418,10 +1428,12 @@
         <svg class="spark" style="right:14%;top:22%;animation-delay:1s" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
         <h2 class="stack-title st-lg">Thank<br class="sm:hidden"> You</h2>
         <p class="foot-note">Matty lovers • 2026</p>
+        <!-- ✏️ character art: sits in its own clear space below the text, well clear of the
+             mascots at the very bottom corners, sending love — a normal (non-absolute) element,
+             so it always has guaranteed empty room around it, on every screen size -->
+        <div class="char-parallax char-heart"><div class="char-parallax-track"><div class="char-card" style="--r:-4deg;" aria-hidden="true"></div></div></div>
         <svg class="foot-mascot" style="left:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-daisy"/></svg>
         <svg class="foot-mascot" style="right:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-sun"/></svg>
-        <!-- ✏️ character art: sending love to everyone reading this far -->
-        <div class="char-parallax char-heart"><div class="char-card" style="--r:-4deg;" aria-hidden="true"></div></div>
     </footer>
 
     <script>
@@ -1841,11 +1853,12 @@
                pixels against the scroll, proportional to how far its own anchor is
                from the centre of the screen. Skips entirely for reduced-motion. */
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const charEls = document.querySelectorAll('.char-parallax');
+            const charEls = document.querySelectorAll('.char-parallax-track');
             if (!reduceMotion && charEls.length) {
                 let ticking = false;
-                const SPEED = 0.12; // how strongly each card drifts vs. normal scroll
-                const MAX_SHIFT = 46; // px — keeps the drift subtle, never wild
+                const SPEED = 0.07; // how strongly each card drifts vs. normal scroll
+                const MAX_SHIFT = 18; // px — small on purpose: the cards sit in tight, carefully
+                // measured empty gaps, and a big drift could push one onto the text next to it
                 const updateParallax = () => {
                     ticking = false;
                     const vh = window.innerHeight;
