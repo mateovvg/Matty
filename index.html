@@ -649,6 +649,14 @@
             background: none; border: none; padding: 0; text-align: left; cursor: pointer; font: inherit;
             position: relative; transform: rotate(var(--tilt, -2deg));
             transition: transform .35s cubic-bezier(.2,.9,.3,1.4);
+            /* ✏️ PERFORMANCE: with 12 full, uncropped photos stacked in a column layout,
+               the phone was doing full layout + paint work for every photo on every
+               scroll frame, which is what caused the stutter while scrolling through this
+               section specifically. content-visibility tells the browser to skip layout/paint
+               for a photo until it's actually about to be visible — the size below is just an
+               estimate used for off-screen ones, swapped for the real size once visible. */
+            content-visibility: auto;
+            contain-intrinsic-size: 420px 520px;
         }
         .polaroid:hover, .polaroid:focus-visible { transform: rotate(0deg) scale(1.035) translateY(-6px); z-index: 5; }
         .polaroid:nth-child(6n+1) { --tilt: -2.4deg; } .polaroid:nth-child(6n+2) { --tilt: 1.8deg; }
@@ -1514,6 +1522,7 @@
             { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
             { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
             { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
+            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
             { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
             { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
             { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
@@ -1850,30 +1859,50 @@
             /* ✏️ CHARACTER CUTOUTS — a light scroll parallax so each character feels
                like part of the scene (not a static sticker). Every card moves a few
                pixels against the scroll, proportional to how far its own anchor is
-               from the centre of the screen. Skips entirely for reduced-motion. */
+               from the centre of the screen. Skips entirely for reduced-motion.
+
+               PERFORMANCE NOTE: this used to call getBoundingClientRect() on every
+               card on every single scroll frame. getBoundingClientRect() forces the
+               browser to finish any pending layout work before it can answer — and
+               while scrolling through the photo gallery, the browser already has
+               layout work queued up (photos arriving, column heights settling). Doing
+               both at once on a phone is exactly what caused the stutter there. Fix:
+               measure each card's position ONCE (on load / resize, when nothing else
+               is mid-layout) and cache it, then on scroll just do plain arithmetic
+               with that cached number and window.scrollY — no DOM measuring at all. */
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const charEls = document.querySelectorAll('.char-parallax-track');
+            const charEls = Array.from(document.querySelectorAll('.char-parallax-track'));
             if (!reduceMotion && charEls.length) {
                 let ticking = false;
                 const SPEED = 0.07; // how strongly each card drifts vs. normal scroll
                 const MAX_SHIFT = 18; // px — small on purpose: the cards sit in tight, carefully
                 // measured empty gaps, and a big drift could push one onto the text next to it
+                let cache = [];
+                const remeasure = () => {
+                    // the only place that reads layout — runs on load/resize, never on scroll
+                    cache = charEls.map((el) => {
+                        const r = el.getBoundingClientRect();
+                        return { el, docCenter: r.top + window.scrollY + r.height / 2 };
+                    });
+                };
                 const updateParallax = () => {
                     ticking = false;
-                    const vh = window.innerHeight;
-                    const vCenter = vh / 2;
-                    charEls.forEach((el) => {
-                        const r = el.getBoundingClientRect();
-                        const elCenter = r.top + r.height / 2;
-                        let shift = (vCenter - elCenter) * SPEED;
+                    const vCenter = window.scrollY + window.innerHeight / 2;
+                    cache.forEach(({ el, docCenter }) => {
+                        let shift = (vCenter - docCenter) * SPEED;
                         if (shift > MAX_SHIFT) shift = MAX_SHIFT;
                         if (shift < -MAX_SHIFT) shift = -MAX_SHIFT;
                         el.style.transform = `translateY(${shift.toFixed(1)}px)`;
                     });
                 };
                 const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(updateParallax); } };
+                const onResize = () => { remeasure(); updateParallax(); };
                 window.addEventListener('scroll', onScroll, { passive: true });
-                window.addEventListener('resize', onScroll);
+                window.addEventListener('resize', onResize);
+                // re-measure once images/fonts have settled, in case any anchor's
+                // position shifted slightly as the page finished loading in
+                window.addEventListener('load', remeasure);
+                remeasure();
                 updateParallax();
             }
         });
