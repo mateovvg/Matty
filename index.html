@@ -730,6 +730,8 @@
             background: var(--card-bg); color: var(--card-fg);
             border: 4px solid var(--ink); border-radius: 26px; box-shadow: 8px 8px 0 var(--ink);
             transition: transform .25s cubic-bezier(.2,.9,.3,1.5), box-shadow .25s;
+            /* note: the drag handle (.sup-handle) already sits at z-index: 6, above the
+               character cutouts (z-index: 4), so dragging a card is never blocked by one */
         }
         .sup-card:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 12px 12px 0 var(--ink); }
         .sup-card > .sup-avatar, .sup-card > .sup-text { position: relative; z-index: 1; }
@@ -935,15 +937,105 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
         }
+
+        /* =========================================================
+           ✏️ PRELOADER — covers the page and actually finishes loading every
+           gallery/character image BEFORE the visit starts, so scrolling never
+           triggers a fresh image fetch mid-scroll (that mid-scroll fetch+decode
+           was the real cause of the stutter on phones). Plain CSS by default
+           (visible even before JS runs) and removed by JS once ready, with a
+           timed failsafe so a slow/blocked asset can never trap a visitor here. */
+        .matty-preloader {
+            position: fixed; inset: 0; z-index: 400000;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--purple);
+            transition: opacity .5s ease, visibility 0s linear .5s;
+        }
+        .matty-preloader.is-ready { opacity: 0; visibility: hidden; pointer-events: none; }
+        body.is-preloading { overflow: hidden; height: 100vh; }
+        .preloader-inner { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
+        .preloader-logo {
+            font-size: clamp(2.1rem, 8vw, 3.6rem); color: var(--cream); letter-spacing: .06em;
+            animation: preloaderPulse 1.1s ease-in-out infinite;
+        }
+        @keyframes preloaderPulse { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.08) rotate(2deg); } }
+        .preloader-bar { width: min(240px, 58vw); height: 10px; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; border: 2px solid var(--ink); }
+        .preloader-bar-fill { height: 100%; background: var(--yellow); border-radius: 999px; transition: width .25s ease; }
+        .preloader-pct { font-weight: 800; font-size: .8rem; letter-spacing: .1em; color: var(--cream); opacity: .85; }
+
+        /* =========================================================
+           ✏️ CHARACTER SPOTLIGHT — tap any character cutout to blow it up
+           full-screen with a little speech bubble; tap anywhere to close it. */
+        /* keeps the real play buttons always clickable even on the sliver where the
+           pointing character's box edge technically overlaps the card (z-index: 6,
+           same as the supporter drag handle, both above the characters' z-index: 4) */
+        .cta-actions { position: relative; z-index: 6; }
+        .char-card { pointer-events: auto; cursor: pointer; }
+        .char-card:hover, .char-card:focus-visible { filter: drop-shadow(0 16px 20px rgba(22,17,46,.5)) brightness(1.08); }
+        .char-card:focus-visible { outline: 3px dashed var(--yellow); outline-offset: 6px; }
+        .char-card.is-picked { opacity: .16; transition: opacity .3s ease; }
+
+        .char-spotlight {
+            position: fixed; inset: 0; z-index: 150000; padding: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(22, 17, 46, .74); backdrop-filter: blur(7px);
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .35s ease, visibility 0s linear .35s;
+        }
+        .char-spotlight.is-open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .35s ease; }
+        .char-spotlight-card {
+            position: relative; display: flex; flex-direction: column; align-items: center; gap: 1.3rem;
+            width: 100%; max-width: 420px;
+            transform: scale(.6) translateY(40px) rotate(-3deg); opacity: 0;
+            transition: transform .5s cubic-bezier(.2,.9,.3,1.5), opacity .35s ease;
+        }
+        .char-spotlight.is-open .char-spotlight-card { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+        .char-spotlight-img {
+            width: clamp(200px, 50vw, 320px); aspect-ratio: 3 / 4;
+            background: center/contain no-repeat;
+            filter: drop-shadow(0 22px 30px rgba(0,0,0,.45));
+            animation: charSpotlightFloat 3s ease-in-out infinite;
+        }
+        @keyframes charSpotlightFloat { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-16px) rotate(2deg); } }
+        .char-spotlight-bubble {
+            position: relative; max-width: 320px; text-align: center;
+            background: var(--cream); color: var(--ink); border: 4px solid var(--ink); border-radius: 22px;
+            padding: 1rem 1.3rem; box-shadow: 6px 6px 0 var(--ink);
+        }
+        .char-spotlight-bubble::before, .char-spotlight-bubble::after {
+            content: ''; position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            border-left: 13px solid transparent; border-right: 13px solid transparent;
+        }
+        .char-spotlight-bubble::before { border-bottom: 15px solid var(--ink); }
+        .char-spotlight-bubble::after { top: -10px; border-left-width: 10px; border-right-width: 10px; border-bottom: 11px solid var(--cream); }
+        .char-spotlight-bubble h3 { font-family: 'Dela Gothic One', 'Arial Black', Impact, sans-serif; font-size: clamp(1.1rem, 3vw, 1.4rem); margin-bottom: .5rem; }
+        .char-spotlight-bubble p { font-size: clamp(.9rem, 2.4vw, 1.02rem); font-weight: 600; line-height: 1.6; color: #3a3260; }
+        .char-spotlight-hint { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cream); opacity: .7; }
+        .char-spotlight .game-close { position: absolute; top: -.9rem; right: -.6rem; }
+        @media (max-width: 480px) {
+            .char-spotlight-img { width: clamp(170px, 56vw, 230px); }
+        }
     </style>
 </head>
 <body class="antialiased" x-data="gameSystem()"
-      :class="showGamesMenu ? 'game-open' : ''"
+      :class="[showGamesMenu ? 'game-open' : '', !assetsReady ? 'is-preloading' : '']"
       @mousemove="handleMouseMove($event)"
       @touchstart="handleTouchMove($event)"
       @keydown.window="handleKeyDown($event)"
-      @keydown.escape.window="showGamesMenu && closeAllGames(); showWinModal && resetToHome()"
+      @keydown.escape.window="showGamesMenu && closeAllGames(); showWinModal && resetToHome(); activeChar && closeChar()"
       x-init="if (window.AOS) { AOS.init({ duration: 900, once: true, offset: 60 }); }">
+
+    <!-- ✏️ PRELOADER: actually finishes loading every gallery/character image before
+         the page is usable, so scrolling never has to fetch+decode an image mid-scroll
+         (that was the real cause of the phone stutter). See assetsReady / loadProgress
+         and the preload logic near the top of the <script> at the bottom of this file. -->
+    <div class="matty-preloader" :class="assetsReady ? 'is-ready' : ''" aria-hidden="true">
+        <div class="preloader-inner">
+            <div class="preloader-logo font-display">MATTY</div>
+            <div class="preloader-bar"><div class="preloader-bar-fill" :style="`width:${loadProgress}%`"></div></div>
+            <div class="preloader-pct" x-text="`${loadProgress}%`"></div>
+        </div>
+    </div>
 
     <a href="#main" class="skip-link">Skip to content</a>
 
@@ -1252,7 +1344,7 @@
                     </div>
                 </article>
                 <!-- ✏️ character art: leaning on the "about" card -->
-                <div class="char-parallax char-lean"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div></div>
+                <div class="char-parallax char-lean"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" :class="activeChar === 'lean' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Say hi to Matty" @click.stop="openChar('lean')" @keydown.enter.prevent="openChar('lean')" @keydown.space.prevent="openChar('lean')"></div></div></div>
             </div>
             <div class="age-card-live" data-aos="fade-left">
                 <svg class="spark" style="left:8%;top:12%" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
@@ -1291,7 +1383,7 @@
         <!-- Showcase cards -->
         <section id="vibes" aria-labelledby="vibes-title" style="position:relative; margin-top: clamp(170px, 22vw, 340px);">
             <!-- ✏️ character art: sits in the open gap above this section, pointing up at the title — never over the title or the cards below it -->
-            <div class="char-parallax char-point-up"><div class="char-parallax-track"><div class="char-card" style="--r:4deg;" aria-hidden="true"></div></div></div>
+            <div class="char-parallax char-point-up"><div class="char-parallax-track"><div class="char-card" style="--r:4deg;" :class="activeChar === 'point-up' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="See what Matty's pointing at" @click.stop="openChar('point-up')" @keydown.enter.prevent="openChar('point-up')" @keydown.space.prevent="openChar('point-up')"></div></div></div>
             <div class="text-center mb-14 md:mb-20" data-aos="zoom-out" style="position:relative">
                 <h2 id="vibes-title" class="stack-title st-lg">Matty Vibes</h2>
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">Six little worlds, one big personality</p>
@@ -1308,7 +1400,7 @@
 
         <section id="gallery" aria-labelledby="gallery-title" x-data="{ lightbox: null }" @keydown.escape.window="lightbox = null" style="position:relative; margin-top: clamp(170px, 22vw, 340px);">
             <!-- ✏️ character art: sits in the open gap above this section, looking down toward the photo wall — never over the title or the photos below it -->
-            <div class="char-parallax char-lookdown"><div class="char-parallax-track"><div class="char-card" style="--r:7deg;" aria-hidden="true"></div></div></div>
+            <div class="char-parallax char-lookdown"><div class="char-parallax-track"><div class="char-card" style="--r:7deg;" :class="activeChar === 'lookdown' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Ask Matty about the gallery" @click.stop="openChar('lookdown')" @keydown.enter.prevent="openChar('lookdown')" @keydown.space.prevent="openChar('lookdown')"></div></div></div>
             <div class="text-center mb-14 md:mb-20 relative" data-aos="zoom-out">
                 <svg class="spark" style="left:8%;top:-6px" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
                 <svg class="spark" style="right:10%;top:10px;animation-delay:.7s" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
@@ -1358,7 +1450,7 @@
                 <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase">The legends who keep Matty's world spinning</p>
                 <p class="mt-4 font-bold text-[10px] tracking-[0.25em] uppercase opacity-60">🖐 Grab the corner handle to drag and reorder any card</p>
                 <!-- ✏️ character art: raising a toast to the VIP Supporters -->
-                <div class="char-parallax char-toast"><div class="char-parallax-track"><div class="char-card" style="--r:-5deg;" aria-hidden="true"></div></div></div>
+                <div class="char-parallax char-toast"><div class="char-parallax-track"><div class="char-card" style="--r:-5deg;" :class="activeChar === 'toast' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Raise a toast with Matty" @click.stop="openChar('toast')" @keydown.enter.prevent="openChar('toast')" @keydown.space.prevent="openChar('toast')"></div></div></div>
             </div>
             <div class="sup-grid" data-aos="fade-up">
                 <template x-for="(v, i) in supporters" :key="v.name">
@@ -1399,7 +1491,7 @@
                     </article>
                 </template>
                 <!-- ✏️ character art: peeking in from the side of the supporters grid -->
-                <div class="char-parallax char-shoulder"><div class="char-parallax-track"><div class="char-card" style="--r:5deg;" aria-hidden="true"></div></div></div>
+                <div class="char-parallax char-shoulder"><div class="char-parallax-track"><div class="char-card" style="--r:5deg;" :class="activeChar === 'shoulder' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Peek with Matty" @click.stop="openChar('shoulder')" @keydown.enter.prevent="openChar('shoulder')" @keydown.space.prevent="openChar('shoulder')"></div></div></div>
             </div>
         </section>
 
@@ -1411,14 +1503,14 @@
                     <div class="cta-body body-pink">
                         <h2 id="cta-title" class="stack-title st-md">Ready to play?</h2>
                         <p>Three secrets are hiding somewhere on this page. Find them all to reveal Matty's real age — or take a break with a mini game.</p>
-                        <div class="flex flex-wrap gap-4 justify-center">
+                        <div class="cta-actions flex flex-wrap gap-4 justify-center">
                             <button type="button" @click="showGamesMenu = true" class="btn-chunky btn-cream" style="font-size:11px;padding:1.1rem 1.8rem">MINI GAMES 🕹️</button>
                             <button type="button" @click="gameActive ? stopGame() : startGame()" class="btn-chunky btn-orange" style="font-size:11px;padding:1.1rem 1.8rem"><span x-text="gameActive ? 'CLOSE MISSION' : 'DISCOVER TRUTH 🔍'"></span></button>
                         </div>
                     </div>
                 </div>
                 <!-- ✏️ character art: pointing at the play buttons -->
-                <div class="char-parallax char-point-side"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" aria-hidden="true"></div></div></div>
+                <div class="char-parallax char-point-side"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" :class="activeChar === 'point-side' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="See what Matty's pointing at" @click.stop="openChar('point-side')" @keydown.enter.prevent="openChar('point-side')" @keydown.space.prevent="openChar('point-side')"></div></div></div>
             </div>
         </section>
 
@@ -1439,10 +1531,28 @@
         <!-- ✏️ character art: sits in its own clear space below the text, well clear of the
              mascots at the very bottom corners, sending love — a normal (non-absolute) element,
              so it always has guaranteed empty room around it, on every screen size -->
-        <div class="char-parallax char-heart"><div class="char-parallax-track"><div class="char-card" style="--r:-4deg;" aria-hidden="true"></div></div></div>
+        <div class="char-parallax char-heart"><div class="char-parallax-track"><div class="char-card" style="--r:-4deg;" :class="activeChar === 'heart' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Get a thank-you from Matty" @click.stop="openChar('heart')" @keydown.enter.prevent="openChar('heart')" @keydown.space.prevent="openChar('heart')"></div></div></div>
         <svg class="foot-mascot" style="left:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-daisy"/></svg>
         <svg class="foot-mascot" style="right:2%" viewBox="0 0 120 150" aria-hidden="true"><use href="#m-sun"/></svg>
     </footer>
+
+    <!-- ✏️ CHARACTER SPOTLIGHT: tap any character cutout to open this —
+         big picture + a speech bubble with a message written for that spot.
+         Tap anywhere (including the backdrop) to close it again. Messages live
+         in CHAR_DATA near the top of the <script> at the bottom of this file. -->
+    <div class="char-spotlight" :class="activeChar ? 'is-open' : ''" x-cloak @click="closeChar()" role="dialog" aria-modal="true" :aria-hidden="activeChar ? 'false' : 'true'" :aria-label="activeCharInfo ? activeCharInfo.title : 'Character spotlight'">
+        <div class="char-spotlight-card" @click.stop>
+            <button type="button" class="game-close" @click="closeChar()" aria-label="Close">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <div class="char-spotlight-img" :style="activeCharInfo ? `background-image:url('${activeCharInfo.img}')` : ''"></div>
+            <div class="char-spotlight-bubble">
+                <h3 x-text="activeCharInfo && activeCharInfo.title"></h3>
+                <p x-text="activeCharInfo && activeCharInfo.text"></p>
+            </div>
+            <span class="char-spotlight-hint">Tap anywhere to close</span>
+        </div>
+    </div>
 
     <script>
         /* =========================================================
@@ -1467,6 +1577,23 @@
             { url: 'images/shopping.jpg',      title: 'Shopping Spree',  desc: 'Retail therapy, elite style.',                   w: 1080, h: 1350 },
             { url: 'images/snipeTime.jpg',     title: 'Snipe Time',      desc: 'Locked in, one shot at a time.',                 w: 1600, h: 900 }
         ];
+
+        /* =========================================================
+           ✏️ CHARACTER SPOTLIGHT — one entry per character cutout (key
+           matches its CSS class, e.g. "lean" → .char-lean). img is reused
+           from the cutout's own CSS so there's only one place to swap an
+           image file; title + text show in the big speech bubble when
+           that character is tapped.
+           ========================================================= */
+        const CHAR_DATA = {
+            'lean':        { img: 'images/characters/char-lean.png',       title: 'هلا بك! 👋',   text: 'أهلاً، أنا ماتي! قاعد أتكي هنا أسولف وياكم شوي قبل لا تكتشفون كل أسراري 😄' },
+            'point-up':    { img: 'images/characters/char-point-up.png',   title: 'شوف فوق! 👆',  text: 'هذي بس شوية من أوجه شخصيتي... ستة عوالم صغيرة، وكلها أصلية مية بالمية' },
+            'lookdown':    { img: 'images/characters/char-lookdown.png',   title: 'تحت فيه شي 📸', text: 'انزلوا شوي تحت، فيه أحلى اللحظات مجمّعة... تستاهل نظرة فاحصة' },
+            'toast':       { img: 'images/characters/char-toast.png',      title: 'نخبكم! 🥂',    text: 'هذولا ناس ما قصّروا وياي أبد، أرفع لهم نخب من قلبي الصافي' },
+            'shoulder':    { img: 'images/characters/char-shoulder.png',   title: 'بس أطل 👀',    text: 'جيت أطل من الجنب أشوف مين زاد علي بالدعم هالمرة' },
+            'point-side':  { img: 'images/characters/char-point-side.png', title: 'جرب تلعب 🎮',  text: 'شوف الأزرار ذي تحت، فيها أسرار وألعاب مخبّية... جرب حظك' },
+            'heart':       { img: 'images/characters/char-heart.png',      title: 'أحبكم 💜',    text: 'شكراً انكم مريتوا على صفحتي كلها... قلبي معاكم دايم' }
+        };
 
         /* =========================================================
            ✏️ EDITABLE SETTINGS — change these values to customise
@@ -1690,6 +1817,39 @@
                 snakeGameInt: null, snakeD: 'RIGHT', snakeScore: 0, gameVictory: false,
                 memoryCards: [], flippedCards: [], toast: { show: false, text: '' },
                 escapeLvl: 0, escapeSize: 50, escapePieces: [],
+
+                // ✏️ PRELOADER state — see init() below for the actual preloading logic
+                assetsReady: false, loadProgress: 0,
+                // ✏️ CHARACTER SPOTLIGHT state
+                activeChar: null,
+
+                // Alpine calls this automatically once, as soon as the page's x-data is set up
+                init() {
+                    const urls = [
+                        ...GALLERY.map(p => p.url),
+                        ...Object.values(CHAR_DATA).map(c => c.img)
+                    ];
+                    const total = urls.length;
+                    if (!total) { this.assetsReady = true; return; }
+                    let done = 0;
+                    const bump = () => {
+                        done++;
+                        this.loadProgress = Math.round((done / total) * 100);
+                        if (done >= total) this.assetsReady = true;
+                    };
+                    urls.forEach((src) => {
+                        const img = new Image();
+                        img.onload = bump;
+                        img.onerror = bump; // a missing/broken image should never trap the visitor on the loader
+                        img.src = src;
+                    });
+                    // failsafe: a slow connection or a blocked asset can never hold the
+                    // page hostage — after 8s, show it as-is (images just load normally from there)
+                    setTimeout(() => { this.assetsReady = true; }, 8000);
+                },
+                openChar(key) { this.activeChar = (this.activeChar === key) ? null : key; },
+                closeChar() { this.activeChar = null; },
+                get activeCharInfo() { return this.activeChar ? CHAR_DATA[this.activeChar] : null; },
 
                 showToast(txt) { this.toast.text = txt; this.toast.show = true; setTimeout(() => this.toast.show = false, 2000); },
                 handleMouseMove(e) {
