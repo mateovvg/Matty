@@ -649,14 +649,17 @@
             background: none; border: none; padding: 0; text-align: left; cursor: pointer; font: inherit;
             position: relative; transform: rotate(var(--tilt, -2deg));
             transition: transform .35s cubic-bezier(.2,.9,.3,1.4);
-            /* ✏️ PERFORMANCE: with 12 full, uncropped photos stacked in a column layout,
-               the phone was doing full layout + paint work for every photo on every
-               scroll frame, which is what caused the stutter while scrolling through this
-               section specifically. content-visibility tells the browser to skip layout/paint
-               for a photo until it's actually about to be visible — the size below is just an
-               estimate used for off-screen ones, swapped for the real size once visible. */
-            content-visibility: auto;
-            contain-intrinsic-size: 420px 520px;
+            /* ✏️ PERFORMANCE: an earlier attempt added content-visibility:auto here to
+               skip offscreen photos. On mobile this layout is a single column, so each
+               photo's real box is already reserved correctly via its width/height
+               attributes below — content-visibility's placeholder size didn't match
+               each real photo, so the page actually jumped (reflowed) the moment every
+               new photo crossed into view, which is exactly the stutter that was
+               reported. Removed — the width/height reservation below is the real fix
+               for jump-free scrolling, and the preloader now fully decodes every photo
+               before the page is even shown (see init() in the script), so by the time
+               you scroll here every photo just appears instantly instead of being
+               fetched/decoded on the fly. */
         }
         .polaroid:hover, .polaroid:focus-visible { transform: rotate(0deg) scale(1.035) translateY(-6px); z-index: 5; }
         .polaroid:nth-child(6n+1) { --tilt: -2.4deg; } .polaroid:nth-child(6n+2) { --tilt: 1.8deg; }
@@ -1415,7 +1418,7 @@
                         <span class="polaroid-pin" aria-hidden="true">📌</span>
                         <div class="polaroid-frame">
                             <div class="win-bar" aria-hidden="true"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                            <img :src="p.url" :alt="p.title" :width="p.w || 1080" :height="p.h || 1350" loading="lazy" decoding="async" @load="$el.classList.add('is-loaded')" x-init="$el.complete && $el.naturalWidth && $el.classList.add('is-loaded')" @error="$el.closest('.polaroid').remove()">
+                            <img :src="p.url" :alt="p.title" :width="p.w || 1080" :height="p.h || 1350" decoding="sync" @load="$el.classList.add('is-loaded')" x-init="$el.complete && $el.naturalWidth && $el.classList.add('is-loaded')" @error="$el.closest('.polaroid').remove()">
                         </div>
                         <div class="polaroid-cap">
                             <span class="t" x-text="p.title"></span>
@@ -1649,8 +1652,8 @@
             { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
             { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
             { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
-            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
-            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
+            { name: 'lobo',             desc: 'He reml 🪙',embers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
+            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was coo        img: '', theme: 'carlos',      badge: '🪙' },
             { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
             { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
             { name: 'Shawn',            desc: 'He can turn any random Tuesday into main character energy 🎧',              img: '', theme: 'auto',        badge: '🎧' }
@@ -1839,13 +1842,25 @@
                     };
                     urls.forEach((src) => {
                         const img = new Image();
-                        img.onload = bump;
-                        img.onerror = bump; // a missing/broken image should never trap the visitor on the loader
                         img.src = src;
+                        // ✏️ Loading the bytes isn't enough — a browser can still spend real
+                        // time turning those bytes into on-screen pixels ("decoding") the
+                        // first time a photo is actually painted, and doing that mid-scroll
+                        // is what caused the stutter in the gallery. img.decode() forces that
+                        // decode work to happen right here, before the loading screen ever
+                        // lifts, so every photo in the gallery is a finished, ready-to-paint
+                        // picture the instant it's scrolled to — it just appears, it's never
+                        // being fetched or decoded in that moment.
+                        if (img.decode) {
+                            img.decode().then(bump).catch(bump); // broken/unsupported image: never block the page
+                        } else {
+                            img.onload = bump;
+                            img.onerror = bump;
+                        }
                     });
                     // failsafe: a slow connection or a blocked asset can never hold the
-                    // page hostage — after 8s, show it as-is (images just load normally from there)
-                    setTimeout(() => { this.assetsReady = true; }, 8000);
+                    // page hostage — after 10s, show it as-is (images just load normally from there)
+                    setTimeout(() => { this.assetsReady = true; }, 10000);
                 },
                 openChar(key) { this.activeChar = (this.activeChar === key) ? null : key; },
                 closeChar() { this.activeChar = null; },
