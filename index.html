@@ -165,8 +165,13 @@
             background-image: repeating-conic-gradient(#ffd23f 0% 25%, var(--yellow) 0% 50%);
             background-size: 84px 84px;
             display: flex; align-items: center; justify-content: center;
-            animation: loaderOut .75s cubic-bezier(.7,0,.2,1) 1.1s forwards;
+            /* ✏️ this one screen now also waits for every photo to finish decoding
+               (assetsReady, set from the script) — it slides away the instant that's
+               true, as fast as the device/connection allow. The .is-ready class below
+               is what actually removes it; this transition is just HOW it leaves. */
+            transition: transform .7s cubic-bezier(.7,0,.2,1), visibility 0s linear .7s;
         }
+        .loader.is-ready { transform: translateY(-100%); visibility: hidden; pointer-events: none; }
         .loader-in { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
         .loader-in .spark { position: static; width: 64px; animation: spin 1.4s linear infinite; }
         .loader-word {
@@ -174,7 +179,8 @@
             -webkit-text-stroke: 8px var(--ink); paint-order: stroke fill;
             text-shadow: 0 .06em 0 var(--orange), 0 .12em 0 var(--red), 0 .18em 0 var(--ink);
         }
-        @keyframes loaderOut { to { transform: translateY(-100%); visibility: hidden; } }
+        .loader-bar { width: min(220px, 55vw); height: 9px; border-radius: 999px; background: rgba(22,17,46,.15); overflow: hidden; border: 2px solid var(--ink); }
+        .loader-bar-fill { height: 100%; background: var(--ink); border-radius: 999px; transition: width .2s ease; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* scroll progress */
@@ -941,30 +947,9 @@
             *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
         }
 
-        /* =========================================================
-           ✏️ PRELOADER — covers the page and actually finishes loading every
-           gallery/character image BEFORE the visit starts, so scrolling never
-           triggers a fresh image fetch mid-scroll (that mid-scroll fetch+decode
-           was the real cause of the stutter on phones). Plain CSS by default
-           (visible even before JS runs) and removed by JS once ready, with a
-           timed failsafe so a slow/blocked asset can never trap a visitor here. */
-        .matty-preloader {
-            position: fixed; inset: 0; z-index: 400000;
-            display: flex; align-items: center; justify-content: center;
-            background: var(--purple);
-            transition: opacity .5s ease, visibility 0s linear .5s;
-        }
-        .matty-preloader.is-ready { opacity: 0; visibility: hidden; pointer-events: none; }
+        /* ✏️ PRELOADER state while the yellow curtain (.loader, above) is up —
+           keeps the page from scrolling behind it until assetsReady is true. */
         body.is-preloading { overflow: hidden; height: 100vh; }
-        .preloader-inner { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
-        .preloader-logo {
-            font-size: clamp(2.1rem, 8vw, 3.6rem); color: var(--cream); letter-spacing: .06em;
-            animation: preloaderPulse 1.1s ease-in-out infinite;
-        }
-        @keyframes preloaderPulse { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.08) rotate(2deg); } }
-        .preloader-bar { width: min(240px, 58vw); height: 10px; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; border: 2px solid var(--ink); }
-        .preloader-bar-fill { height: 100%; background: var(--yellow); border-radius: 999px; transition: width .25s ease; }
-        .preloader-pct { font-weight: 800; font-size: .8rem; letter-spacing: .1em; color: var(--cream); opacity: .85; }
 
         /* =========================================================
            ✏️ CHARACTER SPOTLIGHT — tap any character cutout to blow it up
@@ -1027,18 +1012,6 @@
       @keydown.window="handleKeyDown($event)"
       @keydown.escape.window="showGamesMenu && closeAllGames(); showWinModal && resetToHome(); activeChar && closeChar()"
       x-init="if (window.AOS) { AOS.init({ duration: 900, once: true, offset: 60 }); }">
-
-    <!-- ✏️ PRELOADER: actually finishes loading every gallery/character image before
-         the page is usable, so scrolling never has to fetch+decode an image mid-scroll
-         (that was the real cause of the phone stutter). See assetsReady / loadProgress
-         and the preload logic near the top of the <script> at the bottom of this file. -->
-    <div class="matty-preloader" :class="assetsReady ? 'is-ready' : ''" aria-hidden="true">
-        <div class="preloader-inner">
-            <div class="preloader-logo font-display">MATTY</div>
-            <div class="preloader-bar"><div class="preloader-bar-fill" :style="`width:${loadProgress}%`"></div></div>
-            <div class="preloader-pct" x-text="`${loadProgress}%`"></div>
-        </div>
-    </div>
 
     <a href="#main" class="skip-link">Skip to content</a>
 
@@ -1147,11 +1120,19 @@
         </defs>
     </svg>
 
-    <!-- Page-load curtain -->
-    <div class="loader" aria-hidden="true">
+    <!-- ✏️ Page-load curtain — the ONE loading screen for the whole site. It also
+         doubles as the preloader: it actually finishes loading + decoding every
+         gallery/character image before it lifts, so scrolling later never has to
+         fetch/decode an image mid-scroll (that was the real cause of the phone
+         stutter). It stays up only as long as it truly needs to — the moment
+         assetsReady flips true (or the safety timeout fires) it slides away.
+         See assetsReady / loadProgress + the preload logic near the top of the
+         <script> at the bottom of this file. -->
+    <div class="loader" :class="assetsReady ? 'is-ready' : ''" :aria-hidden="assetsReady ? 'true' : 'false'">
         <div class="loader-in">
             <svg class="spark" viewBox="0 0 100 100"><use href="#spark"/></svg>
             <span class="loader-word font-display">MATTY</span>
+            <div class="loader-bar"><div class="loader-bar-fill" :style="`width:${loadProgress}%`"></div></div>
         </div>
     </div>
 
@@ -1589,13 +1570,13 @@
            that character is tapped.
            ========================================================= */
         const CHAR_DATA = {
-            'lean':        { img: 'images/characters/char-lean.png',       title: 'Welcome! 👋',    text: "Hey, I'm Matty! Just chilling here and chatting with you guys a bit before you discover all my secrets 😄" },
-            'point-up':    { img: 'images/characters/char-point-up.png',    title: 'Look up! 👆',    text: 'This is just a glimpse of my personality... six discoverable things about me' },
-            'lookdown':    { img: 'images/characters/char-lookdown.png',    title: 'Something below 📸', text: 'Scroll down a bit, the sweetest moments are gathered here... worth a closer look' },
-            'toast':       { img: 'images/characters/char-toast.png',      title: 'Cheers! 🥂',    text: 'These are people who have always been amazing to me, raising a toast to them from' },
-            'shoulder':    { img: 'images/characters/char-shoulder.png',    title: 'Just peeking 👀',    text: "I came to peek from the side to see who's supporting me this time" },
-            'point-side':  { img: 'images/characters/char-point-side.png', title: 'Try playing 🎮',  text: 'Check out these buttons below, there are secrets you can learn about me if you solve them and hidden games... try your luck' },
-            'heart':       { img: 'images/characters/char-heart.png',      title: 'Love you 💜',    text: 'Thanks for checking out my whole page... i loveeeee u yall' }
+            'lean':        { img: 'images/characters/char-lean.png',       title: 'هلا بك! 👋',   text: 'أهلاً، أنا ماتي! قاعد أتكي هنا أسولف وياكم شوي قبل لا تكتشفون كل أسراري 😄' },
+            'point-up':    { img: 'images/characters/char-point-up.png',   title: 'شوف فوق! 👆',  text: 'هذي بس شوية من أوجه شخصيتي... ستة عوالم صغيرة، وكلها أصلية مية بالمية' },
+            'lookdown':    { img: 'images/characters/char-lookdown.png',   title: 'تحت فيه شي 📸', text: 'انزلوا شوي تحت، فيه أحلى اللحظات مجمّعة... تستاهل نظرة فاحصة' },
+            'toast':       { img: 'images/characters/char-toast.png',      title: 'نخبكم! 🥂',    text: 'هذولا ناس ما قصّروا وياي أبد، أرفع لهم نخب من قلبي الصافي' },
+            'shoulder':    { img: 'images/characters/char-shoulder.png',   title: 'بس أطل 👀',    text: 'جيت أطل من الجنب أشوف مين زاد علي بالدعم هالمرة' },
+            'point-side':  { img: 'images/characters/char-point-side.png', title: 'جرب تلعب 🎮',  text: 'شوف الأزرار ذي تحت، فيها أسرار وألعاب مخبّية... جرب حظك' },
+            'heart':       { img: 'images/characters/char-heart.png',      title: 'أحبكم 💜',    text: 'شكراً انكم مريتوا على صفحتي كلها... قلبي معاكم دايم' }
         };
 
         /* =========================================================
@@ -1652,8 +1633,8 @@
             { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
             { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
             { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
-            { name: 'lobo',             desc: 'He reml 🪙',embers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
-            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was coo        img: '', theme: 'carlos',      badge: '🪙' },
+            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
+            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
             { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
             { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
             { name: 'Shawn',            desc: 'He can turn any random Tuesday into main character energy 🎧',              img: '', theme: 'auto',        badge: '🎧' }
@@ -1859,8 +1840,8 @@
                         }
                     });
                     // failsafe: a slow connection or a blocked asset can never hold the
-                    // page hostage — after 10s, show it as-is (images just load normally from there)
-                    setTimeout(() => { this.assetsReady = true; }, 10000);
+                    // page hostage — after 6s, show it as-is (images just load normally from there)
+                    setTimeout(() => { this.assetsReady = true; }, 6000);
                 },
                 openChar(key) { this.activeChar = (this.activeChar === key) ? null : key; },
                 closeChar() { this.activeChar = null; },
