@@ -896,13 +896,15 @@
         .sup-bandar:hover { animation: wobble .7s ease; }
         @keyframes wobble { 0%, 100% { transform: translateY(-6px) rotate(-1deg); } 25% { transform: translateY(-6px) rotate(3deg); } 75% { transform: translateY(-6px) rotate(-3deg); } }
 
-        /* #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow */
+        /*
+        #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow 
         .sup-lobo { --card-bg: radial-gradient(circle at 50% 0%, #f0fff5 0, #c8f3d8 100%); --ring: conic-gradient(#34d399, #a7f3d0, #10b981, #34d399); --pic-bg: #d1fae5; border-radius: 44px 10px 44px 10px; }
         .sup-lobo .sup-name { color: #047857; }
         .sup-lobo .sup-avatar { animation: heartGlow 2.2s ease-in-out infinite; }
         .sup-lobo::after { content: '💚'; position: absolute; top: .6rem; right: .9rem; font-size: 1.2rem; z-index: 0; animation: floatUp 3s ease-in-out infinite; }
         @keyframes heartGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 0 10px rgba(16,185,129,.28); } }
         @keyframes floatUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        */
 
         /* #8 Carlos C — "Old is Gold": vintage gold plate, sepia photo, serif italics */
         .sup-carlos { --card-bg: linear-gradient(145deg, #a06a00, #ffe08a 42%, #c48a1a 70%, #7a4d00); --card-fg: #1f1200; --ring: conic-gradient(#fff1b0, #b07a12, #ffd86b, #7a4d00, #fff1b0); --pic-bg: #f2d48b; border-radius: 16px; outline: 2px solid rgba(255,255,255,.6); outline-offset: -10px; }
@@ -1113,6 +1115,62 @@
             .char-spotlight { background: rgba(22,17,46,.88); }
         }
         .lb-hint { text-align: center; font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .5; padding-top: .9rem; }
+
+        /* =========================================================
+           ✏️ GREETING CARD MAKER
+           ========================================================= */
+        #cards, #visitors { scroll-margin-top: 90px; }
+        .cm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.6rem, 4vw, 2.6rem); max-width: 1020px; margin: 0 auto; }
+        @media (min-width: 900px) {
+            .cm-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+            .cm-result { position: sticky; top: 100px; }
+        }
+        .cm-body { padding: clamp(1rem, 3vw, 1.6rem); display: flex; flex-direction: column; gap: 1.2rem; background: var(--pink-l); }
+        .cm-label { display: block; font-weight: 800; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; margin-bottom: .5rem; }
+        .cm-chars { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
+        .cm-char {
+            aspect-ratio: 3 / 4; background: var(--cream) center / contain no-repeat; background-origin: content-box;
+            border: 3px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); padding: 4px; cursor: pointer;
+            transition: transform .2s cubic-bezier(.2,.9,.3,1.5), box-shadow .2s, background-color .2s;
+        }
+        .cm-char:hover { transform: translateY(-3px); }
+        .cm-char:focus-visible, .cm-pill:focus-visible, .cm-input:focus-visible { outline: 3px dashed var(--orange); outline-offset: 3px; }
+        .cm-char[aria-checked="true"] { background-color: var(--yellow); transform: translateY(-4px) rotate(-2deg); box-shadow: 5px 6px 0 var(--ink); }
+        .cm-pills { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .cm-pill {
+            min-height: 44px; padding: .4rem .9rem; font: 800 .78rem 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+            background: var(--cream); border: 3px solid var(--ink); border-radius: 999px; box-shadow: 2px 3px 0 var(--ink); cursor: pointer;
+            transition: transform .2s cubic-bezier(.2,.9,.3,1.5), background-color .2s;
+        }
+        .cm-pill:hover { transform: translateY(-2px); }
+        .cm-pill[aria-checked="true"] { background: var(--yellow); transform: translateY(-2px) rotate(-1.5deg); box-shadow: 3px 4px 0 var(--ink); }
+        .cm-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+        @media (max-width: 420px) { .cm-two { grid-template-columns: minmax(0, 1fr); } }
+        .cm-input {
+            display: block; width: 100%; min-width: 0; padding: .7rem .9rem; background: #fff; color: var(--ink);
+            font: 700 16px 'Plus Jakarta Sans', sans-serif; /* 16px stops iOS from zooming in on focus */
+            border: 3px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); resize: vertical;
+        }
+        .cm-count { display: block; text-align: right; font-size: .7rem; font-weight: 800; opacity: .55; margin-top: .3rem; }
+        .cm-preview { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; background: var(--purple); border: 4px solid var(--ink); border-radius: 18px; box-shadow: 6px 7px 0 var(--ink); }
+        .cm-actions { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; margin-top: 1.3rem; }
+        .cm-status { min-height: 1.3rem; margin-top: .8rem; text-align: center; font-weight: 700; font-size: .85rem; }
+
+        /* =========================================================
+           ✏️ VISITOR COUNTER
+           ========================================================= */
+        .vc-card { max-width: 560px; margin: 0 auto; position: relative; }
+        .vc-body { padding: clamp(1.4rem, 4vw, 2.1rem) clamp(1rem, 4vw, 2rem); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; background: var(--pink-l); }
+        .vc-title { font-family: 'Dela Gothic One', 'Arial Black', Impact, sans-serif; font-weight: 400; font-size: clamp(1.15rem, 4.4vw, 1.7rem); text-transform: uppercase; line-height: 1.1; }
+        .vc-digits { display: flex; justify-content: center; gap: clamp(.25rem, 1.4vw, .5rem); max-width: 100%; }
+        .vc-digit {
+            min-width: clamp(1.9rem, 9vw, 3.2rem); padding: .35rem .15rem; text-align: center; line-height: 1;
+            font-family: 'Orbitron', 'Dela Gothic One', monospace; font-weight: 900; font-size: clamp(1.5rem, 7vw, 2.6rem);
+            background: var(--ink); color: var(--yellow); border: 3px solid var(--ink); border-radius: 10px;
+            box-shadow: inset 0 -6px 0 rgba(255,255,255,.12), 3px 4px 0 rgba(22,17,46,.45);
+        }
+        .vc-msg { font-weight: 800; color: #3a3260; font-size: clamp(.9rem, 2.8vw, 1.05rem); max-width: 36ch; }
+        .vc-note { font-size: .68rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .5; }
     </style>
 </head>
 <body class="antialiased" x-data="gameSystem()"
@@ -1670,6 +1728,83 @@
             </div>
         </section>
 
+        <!-- ===================== GREETING CARD MAKER =====================
+             Visitors pick a character + occasion, type a name, and get a ready-made picture card
+             to download or share. Characters come from CHAR_DATA; occasions + their texts live in
+             CARD_OCCASIONS (script at the bottom of this file). -->
+        <section id="cards" aria-labelledby="cards-title" x-data="cardMaker()">
+            <div class="text-center mb-10 md:mb-14" data-aos="zoom-out">
+                <h2 id="cards-title" class="stack-title st-lg">Make a Card</h2>
+                <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase opacity-70">Pick a character, add a name, send some love 💌</p>
+            </div>
+            <div class="cm-grid">
+                <article class="info-card bar-teal" data-aos="fade-up">
+                    <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="win-title">card-maker.exe</span></div>
+                    <div class="cm-body">
+                        <div>
+                            <span class="cm-label" id="cm-char-label">1 · Pick a character</span>
+                            <div class="cm-chars" role="radiogroup" aria-labelledby="cm-char-label">
+                                <template x-for="c in chars" :key="c.key">
+                                    <button type="button" role="radio" class="cm-char" :aria-checked="String(character === c.key)" :aria-label="c.label" :title="c.label" :style="`background-image:url('${c.img}')`" @click="character = c.key"></button>
+                                </template>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="cm-label" id="cm-occ-label">2 · Pick an occasion</span>
+                            <div class="cm-pills" role="radiogroup" aria-labelledby="cm-occ-label">
+                                <template x-for="o in occasions" :key="o.id">
+                                    <button type="button" role="radio" class="cm-pill" :aria-checked="String(occasion === o.id)" @click="occasion = o.id" x-text="o.label"></button>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="cm-two">
+                            <div>
+                                <label class="cm-label" for="cm-to">To (optional)</label>
+                                <input id="cm-to" class="cm-input" type="text" maxlength="18" autocomplete="off" placeholder="Their name" x-model="to">
+                            </div>
+                            <div>
+                                <label class="cm-label" for="cm-from">From (optional)</label>
+                                <input id="cm-from" class="cm-input" type="text" maxlength="18" autocomplete="off" placeholder="Your name" x-model="from">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="cm-label" for="cm-msg">Your own message (optional)</label>
+                            <textarea id="cm-msg" class="cm-input" rows="2" maxlength="90" placeholder="Leave empty for a ready-made message" x-model="msg"></textarea>
+                            <span class="cm-count" aria-hidden="true"><span x-text="msg.length"></span>/90</span>
+                        </div>
+                    </div>
+                </article>
+
+                <div class="cm-result" data-aos="fade-up" data-aos-delay="100">
+                    <canvas class="cm-preview" width="1080" height="1350" x-ref="cv" role="img" :aria-label="ariaLabel"></canvas>
+                    <div class="cm-actions">
+                        <button type="button" class="btn-chunky btn-orange" @click="download()">SAVE CARD ⬇️</button>
+                        <button type="button" class="btn-chunky btn-cream" x-show="canShare" x-cloak @click="share()">SHARE 📤</button>
+                    </div>
+                    <p class="cm-status" role="status" aria-live="polite" x-text="status"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== VISITOR COUNTER =====================
+             ✏️ Counts each device once, using the free Abacus counting service. Change the
+             namespace/key in VISITOR_COUNTER (script at the bottom) — set enabled:false to hide it. -->
+        <section id="visitors" aria-labelledby="visitors-title" x-data="visitorCounter()" x-show="on" x-cloak>
+            <div class="info-card bar-pink vc-card" data-aos="zoom-in">
+                <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="win-title">visitors.exe</span></div>
+                <div class="vc-body">
+                    <h2 id="visitors-title" class="vc-title">Matty Fans So Far</h2>
+                    <div class="vc-digits" role="img" :aria-label="failed ? 'Visitor count unavailable' : (count === null ? 'Counting visitors' : count + ' visitors so far')">
+                        <template x-for="(d, i) in digits" :key="i">
+                            <span class="vc-digit" aria-hidden="true" x-text="d"></span>
+                        </template>
+                    </div>
+                    <p class="vc-msg" role="status" aria-live="polite" x-text="message"></p>
+                    <p class="vc-note">Each device is counted once</p>
+                </div>
+            </div>
+        </section>
+
         <div x-show="gameActive" x-cloak>
             <template x-for="(t, index) in targets" :key="index">
                 <div class="hidden-target" role="button" aria-label="Hidden secret" x-show="!t.clicked" @click="hitTarget(index)" @touchstart.prevent="hitTarget(index)" :style="`left: ${t.x}px; top: ${t.y}px; opacity: ${isTargetVisible(t.x, t.y) ? 1 : 0}`">
@@ -2096,6 +2231,241 @@
                              : this.d + ' days until the party 🎈';
                 },
                 celebrate() { birthdayFx(); }
+            };
+        }
+
+        /* =========================================================
+           ✏️ GREETING CARD MAKER
+           CARD_OCCASIONS = the occasion buttons. head = the big title (1-2 lines),
+           line = the ready-made message used when the visitor writes none.
+           The card is drawn on a <canvas> (1080×1350) so it can be saved as a PNG.
+           ========================================================= */
+        const CARD_OCCASIONS = [
+            { id: 'birthday', label: 'Birthday 🎂',     head: ['HAPPY', 'BIRTHDAY'], line: 'Wishing you a day full of cake, laughs and elite energy!' },
+            { id: 'congrats', label: 'Congrats 🎉',     head: ['CONGRATS!'],         line: 'So proud of you. You absolutely crushed it!' },
+            { id: 'thanks',   label: 'Thank you 💜',    head: ['THANK', 'YOU'],      line: 'You make everything better just by being you.' },
+            { id: 'luck',     label: 'Good luck 🍀',    head: ['GOOD', 'LUCK'],      line: "Go show them what you've got. You were made for this!" },
+            { id: 'eid',      label: 'Eid 🌙',          head: ['EID', 'MUBARAK'],    line: 'May your day be full of joy, family and sweets.' },
+            { id: 'hey',      label: 'Just because ✨', head: ['HEY', 'YOU!'],       line: 'Just a little card to remind you that you are awesome.' }
+        ];
+        const CARD_CHAR_LABELS = { 'lean': 'Leaning Matty', 'point-up': 'Matty pointing up', 'lookdown': 'Matty looking down', 'toast': 'Matty cheering', 'shoulder': 'Matty peeking', 'point-side': 'Matty pointing', 'heart': 'Matty with a heart' };
+        const _cardImgs = {};
+        function cardImg(src) {
+            return _cardImgs[src] || (_cardImgs[src] = new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }));
+        }
+        function cardRR(ctx, x, y, w, h, r) {
+            ctx.beginPath(); ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+        }
+        function cardWrap(ctx, text, maxW, maxLines) {
+            const words = text.split(' '), lines = []; let cur = '';
+            words.forEach((w) => {
+                const t = cur ? cur + ' ' + w : w;
+                if (ctx.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = w; }
+            });
+            if (cur) lines.push(cur);
+            if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
+            return lines;
+        }
+        async function drawCard(cv, st) {
+            const ctx = cv.getContext('2d'), W = 1080, H = 1350;
+            const INK = '#16112e', CREAM = '#fff6e6', PINK = '#f9c6dc', PINKL = '#ffe8f1';
+            const DISPLAY = '"Dela Gothic One","Arial Black",Impact,sans-serif', BODY = '"Plus Jakarta Sans",Arial,sans-serif';
+            const img = await cardImg(CHAR_DATA[st.character].img);
+            const occ = st.occ, idx = Math.max(0, CARD_OCCASIONS.findIndex((o) => o.id === occ.id)); // (id lookup: occ may be a reactive proxy, so indexOf(occ) would miss)
+            ctx.clearRect(0, 0, W, H); ctx.lineJoin = 'round';
+
+            // purple checkerboard wall
+            for (let r = 0; r * 84 < H; r++) for (let c = 0; c * 84 < W; c++) { ctx.fillStyle = (r + c) % 2 ? '#7a6df0' : '#5a4bd6'; ctx.fillRect(c * 84, r * 84, 84, 84); }
+
+            // browser-window frame
+            const wx = 50, wy = 50, ww = 980, wh = 1250;
+            ctx.fillStyle = INK; cardRR(ctx, wx + 16, wy + 18, ww, wh, 40); ctx.fill();
+            ctx.save(); cardRR(ctx, wx, wy, ww, wh, 40); ctx.clip();
+            for (let r = 0; r * 90 < wh + 90; r++) for (let c = 0; c * 90 < ww + 90; c++) { ctx.fillStyle = (r + c) % 2 ? PINK : PINKL; ctx.fillRect(wx + c * 90, wy + r * 90, 90, 90); }
+            ctx.fillStyle = '#ff7a2f'; ctx.fillRect(wx, wy, ww, 78);
+            ctx.fillStyle = INK; ctx.fillRect(wx, wy + 78, ww, 8);
+            ctx.restore();
+            cardRR(ctx, wx, wy, ww, wh, 40); ctx.lineWidth = 12; ctx.strokeStyle = INK; ctx.stroke();
+            [['#ee4b3b', 100], ['#ffc61a', 142], ['#26b5a9', 184]].forEach(([col, x]) => { ctx.beginPath(); ctx.arc(x, wy + 39, 13, 0, 7); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.stroke(); });
+            ctx.fillStyle = INK; ctx.font = '800 26px ' + BODY; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
+            ctx.fillText('MATTY-CARD.EXE', wx + ww - 36, wy + 41);
+            if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+            // confetti scattered on the card (same layout every time for the same occasion)
+            let seed = 7 + idx * 13; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+            const pal = ['#ff7a2f', '#ffc61a', '#ee4b3b', '#26b5a9', '#fff6e6', '#7a6df0'];
+            for (let i = 0; i < 34; i++) {
+                const x = 90 + rnd() * 900, y = 150 + rnd() * 850, s = 12 + rnd() * 16;
+                ctx.save(); ctx.translate(x, y); ctx.rotate(rnd() * 6);
+                ctx.fillStyle = pal[i % pal.length]; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+                if (i % 3 === 0) { ctx.beginPath(); ctx.arc(0, 0, s / 2, 0, 7); ctx.fill(); ctx.stroke(); } else { ctx.fillRect(-s / 2, -s / 4, s, s / 2); ctx.strokeRect(-s / 2, -s / 4, s, s / 2); }
+                ctx.restore();
+            }
+
+            // big circle behind the character
+            ctx.beginPath(); ctx.arc(540, 700, 300, 0, 7); ctx.fillStyle = PINK; ctx.fill();
+            ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.stroke();
+
+            // stacked-shadow headline (same look as the site's titles)
+            const lines = occ.head; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            ctx.font = '400 100px ' + DISPLAY;
+            const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+            const size = Math.max(60, Math.min(lines.length > 1 ? 108 : 125, 100 * 820 / widest)); // 2-line titles are a bit smaller so their stacked shadows never touch
+            ctx.font = '400 ' + size + 'px ' + DISPLAY;
+            const layers = ['#ffa53a', '#ff7a2f', '#ee4b3b', '#26b5a9', INK], step = size * 0.07;
+            lines.forEach((l, i) => {
+                const y = 150 + size * 0.84 + i * size * 1.14;
+                for (let k = layers.length; k >= 1; k--) { ctx.lineWidth = size * 0.1; ctx.strokeStyle = INK; ctx.strokeText(l, 540, y + step * k); ctx.fillStyle = layers[k - 1]; ctx.fillText(l, 540, y + step * k); }
+                ctx.lineWidth = size * 0.12; ctx.strokeStyle = INK; ctx.strokeText(l, 540, y); ctx.fillStyle = CREAM; ctx.fillText(l, 540, y);
+            });
+
+            // the character
+            if (img) {
+                const s = Math.min(560 / img.width, 600 / img.height), dw = img.width * s, dh = img.height * s;
+                ctx.save(); ctx.translate(540, 700); ctx.rotate(-3 * Math.PI / 180);
+                ctx.shadowColor = 'rgba(22,17,46,.35)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 16;
+                ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh); ctx.restore();
+            }
+
+            // sparkles
+            const star = new Path2D('M50 2 C54 32 68 46 98 50 C68 54 54 68 50 98 C46 68 32 54 2 50 C32 46 46 32 50 2Z');
+            [[130, 470, 74], [950, 430, 60], [120, 880, 56], [955, 905, 78]].forEach(([x, y, s]) => {
+                ctx.save(); ctx.translate(x - s / 2, y - s / 2); ctx.scale(s / 100, s / 100);
+                ctx.fillStyle = '#ffc61a'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.fill(star); ctx.stroke(star); ctx.restore();
+            });
+
+            // speech bubble with the message
+            ctx.font = '800 36px ' + BODY; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            const text = st.msg || occ.line, tl = cardWrap(ctx, text, 780, 3), bh = 44 + tl.length * 48, by = 1022;
+            ctx.fillStyle = INK; cardRR(ctx, 110 + 10, by + 12, 860, bh, 34); ctx.fill();
+            ctx.fillStyle = CREAM; ctx.strokeStyle = INK; ctx.lineWidth = 8; cardRR(ctx, 110, by, 860, bh, 34); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(500, by); ctx.lineTo(540, by - 34); ctx.lineTo(580, by); ctx.closePath(); ctx.fillStyle = CREAM; ctx.fill(); ctx.stroke();
+            ctx.fillStyle = CREAM; ctx.fillRect(504, by - 5, 72, 12);
+            ctx.fillStyle = INK; tl.forEach((l, i) => ctx.fillText(l, 540, by + 56 + i * 48));
+
+            // To / From name tags
+            const pill = (label, x, align, col) => {
+                ctx.font = '800 28px ' + BODY; const w = ctx.measureText(label).width + 46, px = align === 'right' ? x - w : x, py = 1222;
+                ctx.fillStyle = INK; cardRR(ctx, px + 5, py + 6, w, 56, 28); ctx.fill();
+                ctx.fillStyle = col; ctx.strokeStyle = INK; ctx.lineWidth = 5; cardRR(ctx, px, py, w, 56, 28); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, px + w / 2, py + 30);
+            };
+            if (st.to) pill('To: ' + st.to, 100, 'left', '#ffc61a');
+            if (st.from) pill('From: ' + st.from, 980, 'right', '#fff6e6');
+            if (!st.to && !st.from) { ctx.fillStyle = INK; ctx.font = '800 26px ' + BODY; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; if ('letterSpacing' in ctx) ctx.letterSpacing = '6px'; ctx.fillText('MATTY  ·  2026', 540, 1252); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
+        }
+        function cardMaker() {
+            return {
+                chars: Object.keys(CHAR_DATA).map((k) => ({ key: k, img: CHAR_DATA[k].img, label: CARD_CHAR_LABELS[k] || k })),
+                occasions: CARD_OCCASIONS,
+                character: 'lean', occasion: 'birthday', to: '', from: '', msg: '', status: '',
+                _tok: 0, _raf: null,
+                get canShare() { return !!(navigator.share && navigator.canShare); },
+                get occ() { return this.occasions.find((o) => o.id === this.occasion) || this.occasions[0]; },
+                get ariaLabel() { return 'Preview of your card: ' + this.occ.head.join(' ') + (this.to ? ', to ' + this.to : '') + (this.from ? ', from ' + this.from : ''); },
+                init() {
+                    ['character', 'occasion', 'to', 'from', 'msg'].forEach((k) => this.$watch(k, () => this.schedule()));
+                    this.schedule();
+                    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.schedule());
+                },
+                schedule() { if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = null; this.render(); }); },
+                async render() {
+                    const tok = ++this._tok;
+                    // wait for the site fonts, but never longer than ~1.2s (slow/blocked font server -> system fonts are used instead)
+                    try {
+                        if (document.fonts && document.fonts.load) await Promise.race([
+                            Promise.all([document.fonts.load('400 40px "Dela Gothic One"'), document.fonts.load('800 30px "Plus Jakarta Sans"')]),
+                            new Promise((r) => setTimeout(r, 1200))
+                        ]);
+                    } catch (e) { /* fall back to the system fonts */ }
+                    if (tok !== this._tok) return;
+                    await drawCard(this.$refs.cv, { character: this.character, occ: this.occ, to: this.to.trim().replace(/\s+/g, ' '), from: this.from.trim().replace(/\s+/g, ' '), msg: this.msg.trim().replace(/\s+/g, ' ') });
+                },
+                blob() { return new Promise((res, rej) => { try { this.$refs.cv.toBlob((b) => (b ? res(b) : rej(new Error('empty'))), 'image/png'); } catch (e) { rej(e); } }); },
+                async download() {
+                    try {
+                        await this.render();
+                        const b = await this.blob(), a = document.createElement('a');
+                        a.href = URL.createObjectURL(b); a.download = 'matty-card-' + this.occasion + '.png';
+                        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+                        this.status = 'Saved! Check your downloads 💜';
+                        cf({ particleCount: 70, spread: 80, origin: { y: 0.75 } });
+                    } catch (e) { this.status = "Couldn't save the card here. Try again from the live site."; }
+                },
+                async share() {
+                    try {
+                        await this.render();
+                        const b = await this.blob(), file = new File([b], 'matty-card-' + this.occasion + '.png', { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'A card from the Matty fan site' }); this.status = 'Shared! 💜'; }
+                        else { this.download(); }
+                    } catch (e) { if (e && e.name === 'AbortError') return; this.status = "Couldn't open sharing. Use SAVE CARD instead."; }
+                }
+            };
+        }
+
+        /* =========================================================
+           ✏️ VISITOR COUNTER — each device is counted ONCE, via the free Abacus
+           counting service (abacus.jasoncameron.dev). Change namespace to your own
+           domain / a name only you use (3-64 letters, numbers, - _ .) so nobody else
+           shares your counter. Set enabled: false to hide the whole section.
+           ========================================================= */
+        const VISITOR_COUNTER = { enabled: true, namespace: 'mateo-matty-site', key: 'visitors' };
+        function visitorCounter() {
+            const LS = 'matty-visitor-number';
+            return {
+                on: VISITOR_COUNTER.enabled, count: null, shown: 0, failed: false, isNew: false, mine: null, started: false,
+                get digits() {
+                    if (this.failed) return ['–', '–', '–', '–', '–'];
+                    return String(this.shown).padStart(Math.max(5, String(this.count || 0).length), '0').split('');
+                },
+                get message() {
+                    if (this.failed) return 'The counter is taking a nap. Check back soon!';
+                    if (this.count === null) return 'Counting…';
+                    if (this.isNew) return this.mine === 1 ? "You're the very first visitor! 👑" : "You're visitor #" + this.mine + ". Welcome to the club! 💜";
+                    return 'Welcome back! ' + this.count + ' Matty fans have stopped by so far.';
+                },
+                async init() {
+                    if (!this.on) return;
+                    const base = 'https://abacus.jasoncameron.dev', path = encodeURIComponent(VISITOR_COUNTER.namespace) + '/' + encodeURIComponent(VISITOR_COUNTER.key);
+                    const call = async (verb) => {
+                        const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
+                        try {
+                            const r = await fetch(base + '/' + verb + '/' + path, { signal: ctl.signal });
+                            if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+                            const v = Number((await r.json()).value);
+                            if (!isFinite(v)) throw new Error('bad value');
+                            return v;
+                        } finally { clearTimeout(t); }
+                    };
+                    const read = async () => { try { return await call('get'); } catch (e) { if (e.status === 404) return await call('hit'); throw e; } }; // 404 = counter not created yet
+                    let stored = null, canStore = true;
+                    try { stored = localStorage.getItem(LS); localStorage.setItem(LS + '-t', '1'); localStorage.removeItem(LS + '-t'); } catch (e) { canStore = false; }
+                    try {
+                        let n;
+                        if (stored) { n = await read(); this.mine = Number(stored) || null; }
+                        else if (canStore) { n = await call('hit'); this.isNew = true; this.mine = n; try { localStorage.setItem(LS, String(n)); } catch (e) { /* ignore */ } }
+                        else { n = await read(); } // storage blocked: never inflate the number, just show it
+                        this.count = n;
+                    } catch (e) { this.failed = true; return; }
+                    if (!('IntersectionObserver' in window)) { this.animate(); return; }
+                    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); this.animate(); } }, { threshold: 0.4 });
+                    this.$nextTick(() => io.observe(this.$el));
+                },
+                animate() {
+                    if (this.started || this.count === null) return;
+                    this.started = true;
+                    const target = this.count, finish = () => {
+                        this.shown = target;
+                        if (this.isNew && (this.mine === 1 || this.mine % 100 === 0)) { cf({ particleCount: 140, spread: 100, origin: { y: 0.7 } }); }
+                    };
+                    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+                    const t0 = performance.now(), dur = 1400;
+                    const step = (t) => { const p = Math.min(1, (t - t0) / dur); this.shown = Math.round(target * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); else finish(); };
+                    requestAnimationFrame(step);
+                }
             };
         }
 
