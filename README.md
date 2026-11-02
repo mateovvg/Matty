@@ -19,6 +19,8 @@ Visual identity: purple checkerboard wall, pink floor, chunky stacked-shadow typ
 - **7 character cutouts** placed around the page, each interacting with a real element. Tap one to blow it up into a spotlight with a speech bubble; tap anywhere to close
 - **Per-character effects**: every character has its own confetti style and synthesised sound (party poppers, golden stars, camera flash, champagne bubbles, peeking eyes, arcade pixels, falling hearts)
 - **Easter egg**: tap the **MATTY** logo 5 times quickly to trigger a "Matty Party" that plays every character's effect in sequence
+- **Greeting card maker** — visitors pick a character, an occasion (Birthday, Congrats, Thank you, Good luck, Eid, Just because), optionally add *To* / *From* names and their own message, then **save the card as a PNG** or share it with the phone's native share sheet
+- **Visitor counter** — an odometer-style "Matty Fans So Far" counter; each device is counted once
 - **Single yellow loading screen** that waits until every gallery and character image is fully loaded and decoded, then slides away — so images simply *appear* while scrolling
 - Responsive on phones, tablets and desktops; respects `prefers-reduced-motion`; keyboard accessible with ARIA labels
 
@@ -120,6 +122,22 @@ Change the month (1–12) and day. It always counts down to the *next* occurrenc
 - `theme` picks the card style: `goat`, `cosmo`, `chad`, `honda`, `moudir`, `bandar`, `lobo`, `carlos`, `aiden`, `christopher`, `nef`, or `auto` (automatic colour).
 - To invent a new look, copy any `.sup-<theme>` CSS block, rename it, and use the new name as `theme`.
 - Paste new supporters above the "paste new supporters ABOVE this line" comment, and keep the commas.
+
+### Greeting cards — `CARD_OCCASIONS`
+
+Each occasion has an `id`, a button `label`, a big `head` title (1–2 lines) and a ready-made `line` message. Add or edit entries freely; the card is drawn on a canvas (1080×1350) using the site's own fonts and character images from `CHAR_DATA`.
+
+### Visitor counter — `VISITOR_COUNTER`
+
+```js
+const VISITOR_COUNTER = { enabled: true, namespace: 'mateo-matty-site', key: 'visitors' };
+```
+
+- Uses the free **Abacus** counting service (`abacus.jasoncameron.dev`); no account needed.
+- **Change `namespace`** to your own domain or any name only you use (3–64 letters, numbers, `-`, `_`, `.`), so nobody else shares your counter.
+- A device is counted once (remembered in the browser's local storage). If storage is blocked, the number is shown but not increased. If the service is unreachable, the counter shows a friendly "taking a nap" message instead of a fake number.
+- Set `enabled: false` to hide the section completely.
+- Privacy note: loading the counter sends a request to the Abacus service (like any third-party request, it sees the visitor's IP address).
 
 ### Other editable values
 
