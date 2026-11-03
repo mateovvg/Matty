@@ -2718,7 +2718,7 @@
                         } else if (d && d.error === 'links') { this.setForm('bad', "Links aren't allowed on the wall 🙈 Just words, please!");
                         } else if (d && d.error === 'invalid') { this.setForm('bad', 'Hmm, that note looks a bit off. Check your name and message 🙏');
                         } else if (d && d.error === 'busy') { this.setForm('bad', 'The wall is super busy right now 🎢 Please try again in a little while.');
-                        } else { this.setForm('bad', 'Oops, the mail truck got lost 🚚 Please try again in a moment.'); }
+                        } else { if (d && d.detail) console.warn('[Notes Wall] server error:', d.detail); this.setForm('bad', 'Oops, the mail truck got lost 🚚 Please try again in a moment.'); }
                     } catch (e) {
                         this.setForm('bad', 'Oops, the mail truck got lost 🚚 Please check your connection and try again.');
                     } finally { clearTimeout(t); this.sending = false; }
