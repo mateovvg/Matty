@@ -19,9 +19,11 @@ Visual identity: purple checkerboard wall, pink floor, chunky stacked-shadow typ
 - **7 character cutouts** placed around the page, each interacting with a real element. Tap one to blow it up into a spotlight with a speech bubble; tap anywhere to close
 - **Per-character effects**: every character has its own confetti style and synthesised sound (party poppers, golden stars, camera flash, champagne bubbles, peeking eyes, arcade pixels, falling hearts)
 - **Easter egg**: tap the **MATTY** logo 5 times quickly to trigger a "Matty Party" that plays every character's effect in sequence
-- **Greeting card maker** — visitors pick a character, an occasion (Birthday, Congrats, Thank you, Good luck, Eid, Just because), optionally add *To* / *From* names and their own message, then **save the card as a PNG** or share it with the phone's native share sheet
+- **Greeting card maker** — visitors pick a character, an occasion (Birthday, Congrats, Thank you, Good luck, **Custom** with your own title, Just because), optionally add *To* / *From* names and their own message (up to 200 characters — the text automatically shrinks so it always fits the card), then **save the card as a PNG** or share it with the phone's native share sheet
 - **Visitor counter** — an odometer-style "Matty Fans So Far" counter; each device is counted once
 - **Notes Wall** — a moderated guestbook: visitors leave a note, see it as a private preview ("pending review"), and it goes public only after you approve it in a Google Sheet
+- **Birthday theme** — on December 29 (the visitor's local date) the whole site switches to a party theme: berry-pink wall, golden hero, bunting, falling confetti, rising balloons and a welcome pop-up. Preview it any day by adding `?birthday=1` to the address (e.g. `index.html?birthday=1`)
+- **Age card** — shows 22 with a playful hint until the secrets are found, then reveals the real age with a "Confirmed" stamp. The real age is calculated from `SITE.birthYear` and `BIRTHDAY`, so it goes up by itself every year
 - **Single yellow loading screen** that waits until every gallery and character image is fully loaded and decoded, then slides away — so images simply *appear* while scrolling
 - Responsive on phones, tablets and desktops; respects `prefers-reduced-motion`; keyboard accessible with ARIA labels
 
@@ -122,7 +124,9 @@ Change the month (1–12) and day. It always counts down to the *next* occurrenc
 - **Order = order on the page.** The first entry becomes the big full-width card (visitors can also drag cards live).
 - `img: ''` shows a circle with the first letter of the name instead of a photo.
 - To hide a supporter without deleting them, put `// ` in front of their line (as done for `lobo`).
-- `theme` picks the card style: `goat`, `cosmo`, `chad`, `honda`, `moudir`, `bandar`, `lobo`, `carlos`, `aiden`, `christopher`, `nef`, or `auto` (automatic colour).
+- `theme` picks the card style: `goat`, `cosmo`, `chad`, `honda`, `moudir`, `bandar`, `lobo`, `carlos`, `aiden`, `christopher`, `shawn`, `nef`, or `auto` (automatic colour).
+- **Sizes:** the grid is a "bento" layout. Each theme has its own size set in its CSS block (`--c4` / `--c6` = columns on tablet / desktop, `--r` = rows, `--mh` = minimum height), so every card has its own shape. The first card is always the big full-width one.
+- To hide a supporter without deleting them, put `// ` in front of their line (as done for `lobo`).
 - To invent a new look, copy any `.sup-<theme>` CSS block, rename it, and use the new name as `theme`.
 - Paste new supporters above the "paste new supporters ABOVE this line" comment, and keep the commas.
 
@@ -173,6 +177,8 @@ After editing the script later: *Deploy → Manage deployments → Edit → Vers
 
 ### Other editable values
 
+- **Real age:** set `SITE.birthYear` (currently 2000). It is combined with `BIRTHDAY` so the age updates automatically every December 29.
+
 - **Ages** for the mission game: `SITE.fakeAge` / `SITE.realAge`.
 - **TikTok link:** the `tiktok-inner` link in the About section (`✏️ EDIT: TikTok link`).
 - **Marquee words, titles, copy:** plain text in the HTML.
@@ -193,6 +199,7 @@ After editing the script later: *Deploy → Manage deployments → Edit → Vers
 The site is tuned for smooth scrolling on phones:
 
 - The loading screen preloads **and decodes** every gallery/character image before revealing the page.
+- The gallery shows small, screen-sized copies of the photos (created once during the loading screen); the full-size originals are only used in the pop-up view. Big originals are the #1 cause of scroll stutter.
 - Gallery `<img>` tags carry `width`/`height` so no layout shift happens while photos load.
 - Background animations (checkerboard, floor) move with `transform` instead of repainting.
 - Supporter cards **pause their animations while off-screen**; the pulsing glows become static on touch devices.
