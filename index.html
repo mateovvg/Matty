@@ -529,6 +529,22 @@
             text-shadow: 0 .06em 0 var(--orange), 0 .12em 0 var(--red), 0 .18em 0 var(--ink);
         }
         .age-number.bump { animation: bump .8s cubic-bezier(.2,.9,.3,1.6); }
+        /* 🤨 the "is that REALLY his age?" marks — wobble next to the number until the truth is found */
+        .age-wrap { position: relative; display: inline-block; }
+        .age-wrap .age-number { margin: 1rem 0 1.2rem; }
+        .age-sus { position: absolute; top: .35rem; left: 100%; display: flex; align-items: flex-start; gap: 2px; margin-left: .1rem; pointer-events: none; }
+        .age-sus b { font-family: 'Dela Gothic One', 'Arial Black', sans-serif; font-weight: 400; line-height: 1; color: var(--orange); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); display: inline-block; transform-origin: 50% 90%; animation: susWiggle 1.8s ease-in-out infinite; }
+        .age-sus b:nth-child(1) { font-size: clamp(2.2rem, 7vw, 3.6rem); }
+        .age-sus b:nth-child(2) { font-size: clamp(1.5rem, 5vw, 2.4rem); margin-top: 1.1rem; color: var(--pink); animation-delay: .35s; }
+        @keyframes susWiggle { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(10deg) translateY(-6px); } }
+        .age-hint { max-width: 22rem; margin: 0 auto 1.1rem; text-align: center; font-weight: 800; font-size: .9rem; line-height: 1.45; background: rgba(255,246,230,.85); border: 3px solid var(--ink); border-radius: 18px; padding: .55rem .9rem; box-shadow: 3px 3px 0 var(--ink); }
+        /* ✅ after the truth is found: the card turns minty and gets a "confirmed" stamp */
+        .age-card-live.is-verified { background: repeating-conic-gradient(from 0deg at 50% 46%, #b9f3d6 0 8deg, #d4fbe6 8deg 16deg); }
+        .age-card-live.is-verified .age-label { background: #0f8a5f; }
+        .age-stamp { position: absolute; top: 5.2rem; right: .5rem; z-index: 2; transform: rotate(9deg); background: #fff6e6; color: #0f8a5f; border: 4px solid #0f8a5f; border-radius: 14px; padding: .3rem .7rem; font-family: 'Dela Gothic One', 'Arial Black', sans-serif; font-size: .85rem; letter-spacing: .06em; box-shadow: 4px 4px 0 var(--ink); animation: stampIn .55s cubic-bezier(.2,.9,.3,1.5) both; }
+        @keyframes stampIn { 0% { transform: rotate(9deg) scale(2.4); opacity: 0; } 60% { transform: rotate(9deg) scale(.92); opacity: 1; } 100% { transform: rotate(9deg) scale(1); opacity: 1; } }
+        .age-fl { position: absolute; z-index: 0; pointer-events: none; font-size: 1.5rem; opacity: 0; animation: ageFloat 3.4s ease-in infinite; }
+        @keyframes ageFloat { 0% { transform: translateY(0) scale(.7); opacity: 0; } 20% { opacity: .9; } 100% { transform: translateY(-90px) scale(1.1); opacity: 0; } }
         @keyframes bump { 0% { transform: scale(.6) rotate(-8deg); } 60% { transform: scale(1.18) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
 
         .tiktok-inner {
@@ -670,6 +686,8 @@
         @media (min-width: 640px)  { .photo-wall { column-count: 2; } }
         @media (min-width: 1024px) { .photo-wall { column-count: 3; } }
         @media (min-width: 1500px) { .photo-wall { column-count: 4; } }
+        /* 📱 phones: one plain column (no CSS-columns fragmentation to recompute while scrolling) */
+        @media (max-width: 639px) { .photo-wall { column-count: auto; display: flex; flex-direction: column; } }
 
         .polaroid {
             display: inline-block; width: 100%; break-inside: avoid; margin: 0 0 clamp(1.8rem, 3.4vw, 2.6rem);
@@ -718,7 +736,7 @@
             background: linear-gradient(100deg, rgba(0,0,0,.08) 30%, rgba(0,0,0,.16) 50%, rgba(0,0,0,.08) 70%) var(--cream);
             background-size: 200% 100%; animation: photoShimmer 1.6s linear infinite;
         }
-        .polaroid-frame:has(img.is-loaded) { animation: none; background: var(--cream); }
+        .polaroid-frame:has(img.is-loaded), .polaroid-frame.is-ready { animation: none; background: var(--cream); }
         @keyframes photoShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         .polaroid-cap { margin: .85rem .3rem 0; display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
@@ -749,13 +767,18 @@
            To invent a NEW look: copy one of the blocks below, rename it (e.g. .sup-mystyle),
            change the colours, then write  theme: 'mystyle'  in the SUPPORTERS list.
            ========================================================= */
-        .sup-grid { position: relative; display: grid; gap: clamp(1rem, 2.6vw, 1.8rem); grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr)); }
+        .sup-grid { position: relative; display: grid; gap: clamp(1rem, 2.6vw, 1.8rem); grid-template-columns: minmax(0, 1fr); grid-auto-flow: row dense; align-items: stretch; }
+        /* 🧩 BENTO LAYOUT — every theme has its OWN size: --c4 / --c6 = how many columns it spans on tablet (4-col grid) / desktop (6-col grid),
+           --r = how many rows tall, --mh = minimum height on phones. A card's size travels WITH its theme, and the content is
+           centred, so a card that ends up in a taller slot never looks empty. (Phones: one column, but still a different height + layout per card.) */
+        @media (min-width: 640px)  { .sup-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .sup-card { grid-column: span var(--c4, 2); grid-row: span var(--r, 1); } }
+        @media (min-width: 1100px) { .sup-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } .sup-card { grid-column: span var(--c6, 2); } }
         .sup-card {
             --card-bg: var(--cream); --card-fg: var(--ink);
             --ring: conic-gradient(var(--orange), var(--yellow), var(--orange)); --rw: 5px; --av: 96px; --ring-speed: 8s;
             --pic-bg: var(--pink);
-            position: relative; isolation: isolate; overflow: hidden; min-width: 0;
-            display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;
+            position: relative; isolation: isolate; overflow: hidden; min-width: 0; min-height: var(--mh, 0px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1rem;
             padding: 1.7rem 1.2rem 1.6rem;
             background: var(--card-bg); color: var(--card-fg);
             border: 4px solid var(--ink); border-radius: 26px; box-shadow: 8px 8px 0 var(--ink);
@@ -763,7 +786,7 @@
             /* note: the drag handle (.sup-handle) already sits at z-index: 6, above the
                character cutouts (z-index: 4), so dragging a card is never blocked by one */
         }
-        .sup-card:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 12px 12px 0 var(--ink); }
+        @media (hover: hover) and (pointer: fine) { .sup-card:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 12px 12px 0 var(--ink); } }
         .sup-card > .sup-avatar, .sup-card > .sup-text { position: relative; z-index: 1; }
         .sup-text { display: flex; flex-direction: column; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; }
         .sup-name { font-family: 'Dela Gothic One', 'Arial Black', sans-serif; font-weight: 400; font-size: clamp(1.05rem, 2.4vw, 1.3rem); line-height: 1.1; text-transform: uppercase; overflow-wrap: anywhere; max-width: 100%; }
@@ -791,19 +814,20 @@
            This ONLY changes size and layout (bigger avatar, full row width, side-by-side on desktop) —
            it deliberately does NOT touch any theme's own colours/fonts/effects, so a card keeps looking
            like "itself" (just bigger) no matter who gets dragged into this slot. */
-        .sup-card.is-featured-slot {
-            grid-column: 1 / -1; --rw: 8px; margin: 6px;
+        .sup-grid .sup-card.is-featured-slot {
+            grid-column: 1 / -1; grid-row: auto; min-height: 0; flex-direction: column; text-align: center; --rw: 8px; margin: 6px;
             padding: clamp(1.8rem, 3vw, 2.6rem) clamp(1.4rem, 4vw, 3rem);
             border-width: 5px; border-radius: 34px;
         }
-        .sup-card.is-featured-slot .sup-avatar { --av: clamp(130px, 24vw, 180px); }
-        .sup-card.is-featured-slot .sup-text { gap: .8rem; }
+        .sup-grid .sup-card.is-featured-slot .sup-avatar { --av: clamp(130px, 24vw, 180px); }
+        .sup-grid .sup-card.is-featured-slot .sup-text { align-items: center; }
+        .sup-grid .sup-card.is-featured-slot .sup-text { gap: .8rem; }
         .sup-ribbon { display: inline-block; background: var(--ink); color: var(--yellow); font-weight: 800; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; padding: .45rem 1rem; border-radius: 999px; border: 2px solid var(--cream); box-shadow: 0 0 0 3px var(--ink); }
         .sup-crown { position: absolute; top: calc(var(--av) * -.3); left: 50%; z-index: 3; font-size: calc(var(--av) * .38); line-height: 1; transform: translateX(-50%) rotate(-8deg); filter: drop-shadow(0 4px 0 rgba(22,17,46,.5)); animation: crownFloat 2.6s ease-in-out infinite; }
         .sup-note { position: absolute; z-index: 0; font-size: 1.6rem; color: var(--ink); opacity: 0; animation: noteRise 5s ease-in infinite; pointer-events: none; }
         @media (min-width: 768px) {
-            .sup-card.is-featured-slot { flex-direction: row; text-align: left; gap: 2.4rem; justify-content: center; }
-            .sup-card.is-featured-slot .sup-text { align-items: flex-start; }
+            .sup-grid .sup-card.is-featured-slot { flex-direction: row; text-align: left; gap: 2.4rem; justify-content: center; }
+            .sup-grid .sup-card.is-featured-slot .sup-text { align-items: flex-start; }
         }
 
         /* 🖐 Drag handle — grab it to reorder supporters. Always at least half-visible so it's easy
@@ -842,19 +866,20 @@
 
         /* 🌟 NEF — normal card size, but the most eye-catching one: gold sunburst, glowing frame, shine sweep, sparkles + floating notes */
         .sup-nef {
-            z-index: 2; --av: 124px; --rw: 7px; --ring-speed: 5s; --pic-bg: #fff0b8;
+            z-index: 2; --rw: 7px; --ring-speed: 5s; --pic-bg: #fff0b8;
             --ring: conic-gradient(#ffc61a, #ff7a2f, #f9c6dc, #fff6e6, #ffc61a, #ee4b3b, #ffc61a);
             background: repeating-conic-gradient(from 0deg at 50% 46%, #ffd23f 0 8deg, var(--yellow) 8deg 16deg);
-            border-width: 5px; animation: nefGlow 3.5s ease-in-out infinite;
+            border-width: 5px; box-shadow: 0 0 0 5px var(--orange), 9px 9px 0 5px var(--ink), 0 0 30px 8px rgba(255,198,26,.55); /* static glow (animating a box-shadow repaints the card every frame) */
+            --c4: 2; --c6: 2; --r: 2; --mh: 360px; --av: 150px;
         }
         .sup-nef::before { content: ''; position: absolute; inset: -40%; z-index: 0; pointer-events: none; background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.55) 50%, transparent 58%); transform: translateX(-120%); animation: nefShine 4.5s ease-in-out infinite; }
-        .sup-nef:hover { transform: translateY(-6px) scale(1.03); }
+        @media (hover: hover) and (pointer: fine) { .sup-nef:hover { transform: translateY(-6px) scale(1.03); } }
         .sup-nef .sup-badge { width: 2.7rem; height: 2.7rem; font-size: 1.3rem; }
         .sup-nef .sup-name { font-size: clamp(1.9rem, 4vw, 2.5rem); color: var(--cream); -webkit-text-stroke: clamp(3px, .09em, 5px) var(--ink); paint-order: stroke fill; text-shadow: 0 .07em 0 #ffa53a, 0 .14em 0 var(--orange), 0 .21em 0 var(--ink); margin-bottom: .25em; }
         .sup-nef .sup-desc { background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; padding: .6rem .85rem; box-shadow: 3px 3px 0 var(--ink); font-weight: 800; }
 
         /* #1 Gregdub — split "GOAT" card, tag-style name, dashed hazard ring */
-        .sup-goat { --card-bg: linear-gradient(160deg, #fff6e6 58%, var(--yellow) 58%); --ring: repeating-conic-gradient(var(--orange) 0 20deg, var(--ink) 20deg 40deg); --ring-speed: 12s; --pic-bg: #ffe1b8; }
+        .sup-goat { --c4: 2; --c6: 2; --card-bg: linear-gradient(160deg, #fff6e6 58%, var(--yellow) 58%); --ring: repeating-conic-gradient(var(--orange) 0 20deg, var(--ink) 20deg 40deg); --ring-speed: 12s; --pic-bg: #ffe1b8; }
         .sup-goat .sup-name { background: var(--ink); color: var(--yellow); padding: .25rem .7rem; border-radius: 8px; transform: skew(-6deg); }
         .sup-goat:hover .sup-badge { animation: wiggle .6s ease; }
         /* Gregdub's own hazard-tape footer — always there, wherever his card ends up */
@@ -863,40 +888,52 @@
         .sup-goat.is-featured-slot { padding-bottom: calc(clamp(1.8rem, 3vw, 2.4rem) + 20px); }
         .sup-goat.is-featured-slot::after { border-radius: 0 0 30px 30px; }
 
-        /* #2 c.o.s.m.o — deep space, twinkling stars, orbiting planet */
-        .sup-cosmo { --card-bg: radial-gradient(circle at 18% 12%, #5b3cc4 0, transparent 55%), radial-gradient(circle at 85% 92%, #1e6fd9 0, transparent 50%), #100a30; --card-fg: #f1ecff; --ring: conic-gradient(#22d3ee, #a78bfa, #f472b6, #22d3ee); --pic-bg: #2a1f6b; --ring-speed: 5s; }
-        .sup-cosmo::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 12% 30%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 70% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 40% 70%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 88% 60%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 25% 90%, #fff 50%, transparent 51%); background-size: 170px 170px; animation: cosmoTwinkle 3.5s ease-in-out infinite alternate; }
-        @keyframes cosmoTwinkle { to { opacity: .35; } }
-        .sup-cosmo .sup-avatar::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.45); background: radial-gradient(circle 6px at 50% 0, var(--yellow) 92%, transparent 100%); animation: spin 7s linear infinite reverse; }
-        .sup-cosmo .sup-name { color: #c9b8ff; text-shadow: 0 0 14px #7c5cff; }
+        /* #2 c.o.s.m.o — deep space, twinkling stars, orbiting planet  (medium card) */
+        .sup-cosmo { --c4: 2; --c6: 2; --mh: 300px; --card-bg: radial-gradient(circle at 18% 12%, #5b3cc4 0, transparent 55%), radial-gradient(circle at 85% 92%, #1e6fd9 0, transparent 50%), #100a30; --card-fg: #f1ecff; --ring: conic-gradient(#22d3ee, #a78bfa, #f472b6, #22d3ee); --pic-bg: #2a1f66; border-color: #a78bfa; }
+        .sup-cosmo::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 12% 30%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 70% 18%, #fff 50%, transparent 51%), radial-gradient(2px 2px at 40% 78%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 88% 62%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 24% 88%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 55% 42%, #fff 50%, transparent 51%); animation: cosmoTwinkle 3s ease-in-out infinite alternate; }
+        .sup-cosmo .sup-avatar::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.45); background: radial-gradient(circle 6px at 50% 0, var(--yellow) 92%, transparent 100%); animation: spin 7s linear infinite; }
+        .sup-cosmo .sup-name { color: #c9b8ff; text-shadow: 0 0 14px #7c5cff; letter-spacing: .08em; }
+        .sup-cosmo .sup-desc { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: .88rem; color: #dcd3ff; }
         .sup-cosmo .sup-initial { color: #fff; }
 
-        /* #3 chad — royal velvet checkerboard with a gold inner frame */
-        .sup-chad { --card-bg: repeating-conic-gradient(#4a35c8 0% 25%, #3a29a6 0% 50%) 0 0 / 46px 46px; --card-fg: var(--cream); --ring: conic-gradient(#ffd86b, #fff3b0, #b07a12, #ffd86b); --pic-bg: #ffe9a8; outline: 3px solid #ffd86b; outline-offset: -12px; }
-        .sup-chad .sup-name { color: #ffd86b; text-shadow: 0 3px 0 var(--ink); }
+        /* #3 chad — royal velvet checkerboard, gold frame, big crown watermark  (tall card) */
+        .sup-chad { --c4: 2; --c6: 2; --mh: 330px; --card-bg: repeating-conic-gradient(#4a35c8 0% 25%, #3a29a6 0% 50%) 0 0 / 46px 46px; --card-fg: var(--cream); --ring: conic-gradient(#ffd86b, #fff3b0, #b07a12, #ffd86b); --pic-bg: #ffe9a8; outline: 3px solid #ffd86b; outline-offset: -12px; }
+        .sup-chad::after { content: '♛'; position: absolute; right: .9rem; bottom: -.9rem; z-index: 0; font-size: 6.5rem; line-height: 1; color: #ffd86b; opacity: .16; pointer-events: none; }
+        .sup-chad .sup-name { color: #ffd86b; text-shadow: 0 3px 0 var(--ink); letter-spacing: .06em; }
+        .sup-chad .sup-desc { font-style: italic; }
 
-        /* #4 Honda — medical: mint header, crosses, live heartbeat line */
-        .sup-honda { --card-bg: linear-gradient(180deg, #d7fff7 0 34%, #ffffff 34%); --ring: conic-gradient(#14b8a6, #ffffff, #14b8a6); --pic-bg: #c7f6ef; padding-bottom: 2.9rem; }
-        .sup-honda::before { content: '✚ ✚ ✚'; position: absolute; top: .6rem; left: 0; right: 0; text-align: center; letter-spacing: .9em; color: #14b8a6; opacity: .4; font-size: .85rem; z-index: 0; }
-        .sup-honda::after { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 26px; z-index: 0; opacity: .6; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='26' viewBox='0 0 120 26'%3E%3Cpath d='M0 13H30L36 13L40 3L46 23L52 13H70L74 9L78 13H120' fill='none' stroke='%230f766e' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") repeat-x; background-size: 120px 26px; animation: ecg 2.4s linear infinite; }
-        @keyframes ecg { to { background-position-x: -120px; } }
+        /* #4 Honda — medical: mint header, crosses, live heartbeat line  (wide, side-by-side card) */
+        .sup-honda { --c4: 4; --c6: 4; --av: 92px; --mh: 170px; --card-bg: linear-gradient(180deg, #d7fff7 0 38%, #ffffff 38%); --ring: conic-gradient(#14b8a6, #ffffff, #14b8a6); --pic-bg: #c7f6ef; padding: 1.5rem 1.4rem 2.9rem; flex-direction: row; text-align: left; gap: 1.3rem; }
+        .sup-honda .sup-text { align-items: flex-start; flex: 1 1 0; }
+        .sup-honda::before { content: '✚ ✚ ✚'; position: absolute; top: .5rem; right: 1rem; letter-spacing: .6em; color: #14b8a6; opacity: .4; font-size: .85rem; z-index: 0; }
+        .sup-honda::after { content: ''; position: absolute; left: 0; bottom: 4px; width: calc(100% + 120px); height: 26px; z-index: 0; opacity: .6; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='26' viewBox='0 0 120 26'%3E%3Cpath d='M0 13H30L36 13L40 3L46 23L52 13H70L74 9L78 13H120' fill='none' stroke='%230f766e' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") repeat-x; background-size: 120px 26px; animation: ecgSlide 2.4s linear infinite; }
+        @keyframes ecgSlide { to { transform: translateX(-120px); } }
         .sup-honda .sup-name { color: #0f766e; }
 
-        /* #5 Moudir — TikTok-style black card with cyan/pink glitch edges */
-        .sup-moudir { --card-bg: #0b0b12; --card-fg: #fff; --ring: conic-gradient(#25f4ee, #0b0b12, #fe2c55, #0b0b12, #25f4ee); --pic-bg: #1c1c2b; border-color: #fff; box-shadow: 7px 7px 0 #fe2c55, -6px -6px 0 #25f4ee; }
-        .sup-moudir:hover { box-shadow: 11px 11px 0 #fe2c55, -9px -9px 0 #25f4ee; }
+        /* #5 Moudir — TikTok-style black card, glitch edges, scanlines and a blinking REC light  (medium card) */
+        .sup-moudir { --c4: 2; --c6: 2; --mh: 290px; --card-bg: #0b0b12; --card-fg: #fff; --ring: conic-gradient(#25f4ee, #0b0b12, #fe2c55, #0b0b12, #25f4ee); --pic-bg: #1c1c2b; border-color: #fff; box-shadow: 7px 7px 0 #fe2c55, -6px -6px 0 #25f4ee; }
+        .sup-moudir::before { content: '● REC'; position: absolute; top: .7rem; right: .9rem; z-index: 1; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fe2c55; animation: recBlink 1.4s steps(2) infinite; }
+        .sup-moudir::after { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px); }
+        @keyframes recBlink { 50% { opacity: .15; } }
+        @media (hover: hover) and (pointer: fine) {
+            .sup-moudir:hover { box-shadow: 11px 11px 0 #fe2c55, -9px -9px 0 #25f4ee; }
+            .sup-moudir:hover .sup-name { animation: glitch .4s steps(2) infinite; }
+        }
         .sup-moudir .sup-name { text-shadow: 2px 0 #fe2c55, -2px 0 #25f4ee; }
-        .sup-moudir:hover .sup-name { animation: glitch .4s steps(2) infinite; }
+        .sup-moudir .sup-desc { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: .86rem; }
         .sup-moudir .sup-initial { color: #fff; }
         @keyframes glitch { 0% { transform: translate(0); } 25% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, -1px); } 100% { transform: translate(0); } }
 
-        /* #6 Bandar — candy: polka dots, candy-stripe ring, jelly wobble */
-        .sup-bandar { --card-bg: radial-gradient(circle, #fff 0 3px, transparent 3.5px) 0 0 / 22px 22px, #ffcfe6; --ring: repeating-conic-gradient(#ff5d9e 0 15deg, #fff 15deg 30deg); --pic-bg: #ffe6f2; --ring-speed: 14s; border-radius: 42px; }
-        .sup-bandar .sup-name { color: #d6337a; }
-        .sup-bandar:hover { animation: wobble .7s ease; }
-        @keyframes wobble { 0%, 100% { transform: translateY(-6px) rotate(-1deg); } 25% { transform: translateY(-6px) rotate(3deg); } 75% { transform: translateY(-6px) rotate(-3deg); } }
+        /* #6 Bandar — candy shop: polka dots, candy-stripe ring, jelly-bouncing photo, floating sweets  (round, squishy card) */
+        .sup-bandar { --c4: 2; --c6: 2; --mh: 310px; --card-bg: radial-gradient(circle, #fff 0 3px, transparent 3.5px) 0 0 / 22px 22px, #ffcfe6; --ring: repeating-conic-gradient(#ff5d9e 0 15deg, #fff 15deg 30deg); --pic-bg: #ffe6f2; --ring-speed: 14s; border-radius: 52px; }
+        .sup-bandar::before { content: '🍬'; position: absolute; top: .8rem; left: 1rem; z-index: 0; font-size: 1.5rem; animation: bob 3.2s ease-in-out infinite; }
+        .sup-bandar::after { content: '🍭'; position: absolute; bottom: .8rem; right: 1.1rem; z-index: 0; font-size: 1.7rem; animation: bob 2.6s .6s ease-in-out infinite; }
+        .sup-bandar .sup-avatar { animation: jelly 2.8s ease-in-out infinite; }
+        @keyframes jelly { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(1.07, .94); } 60% { transform: scale(.95, 1.06); } }
+        .sup-bandar .sup-name { color: #d6337a; text-shadow: 2px 2px 0 #fff; }
+        .sup-bandar .sup-desc { color: #7a1747; }
 
-        /* #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow */
+        /* #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow (currently hidden — see SUPPORTERS) */
         .sup-lobo { --card-bg: radial-gradient(circle at 50% 0%, #f0fff5 0, #c8f3d8 100%); --ring: conic-gradient(#34d399, #a7f3d0, #10b981, #34d399); --pic-bg: #d1fae5; border-radius: 44px 10px 44px 10px; }
         .sup-lobo .sup-name { color: #047857; }
         .sup-lobo .sup-avatar { animation: heartGlow 2.2s ease-in-out infinite; }
@@ -904,28 +941,88 @@
         @keyframes heartGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 0 10px rgba(16,185,129,.28); } }
         @keyframes floatUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-        /* #8 Carlos C — "Old is Gold": vintage gold plate, sepia photo, serif italics */
-        .sup-carlos { --card-bg: linear-gradient(145deg, #a06a00, #ffe08a 42%, #c48a1a 70%, #7a4d00); --card-fg: #1f1200; --ring: conic-gradient(#fff1b0, #b07a12, #ffd86b, #7a4d00, #fff1b0); --pic-bg: #f2d48b; border-radius: 16px; outline: 2px solid rgba(255,255,255,.6); outline-offset: -10px; }
+        /* #8 Carlos C — "Old is Gold": vintage gold plate with rivets, sepia photo, slow gloss sweep, serif italics  (tall portrait card) */
+        .sup-carlos { --c4: 2; --c6: 2; --mh: 350px; --card-bg: linear-gradient(145deg, #a06a00, #ffe08a 42%, #c48a1a 70%, #7a4d00); --card-fg: #1f1200; --ring: conic-gradient(#fff1b0, #b07a12, #ffd86b, #7a4d00, #fff1b0); --pic-bg: #f2d48b; border-radius: 16px; outline: 2px solid rgba(255,241,176,.8); outline-offset: -10px; }
+        .sup-carlos::before { content: ''; position: absolute; inset: -40%; z-index: 0; pointer-events: none; background: linear-gradient(115deg, transparent 44%, rgba(255,255,255,.4) 50%, transparent 56%); transform: translateX(-120%); animation: nefShine 7s 1s ease-in-out infinite; }
+        .sup-carlos::after { content: ''; position: absolute; inset: 7px; z-index: 0; pointer-events: none; background: radial-gradient(circle 4px at 0 0, #5b3a00 70%, transparent 75%), radial-gradient(circle 4px at 100% 0, #5b3a00 70%, transparent 75%), radial-gradient(circle 4px at 0 100%, #5b3a00 70%, transparent 75%), radial-gradient(circle 4px at 100% 100%, #5b3a00 70%, transparent 75%); }
         .sup-carlos .sup-pic img { filter: sepia(.65) contrast(1.05); }
         .sup-carlos .sup-name { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; text-transform: none; font-size: clamp(1.2rem, 2.6vw, 1.5rem); text-shadow: 0 1px 0 rgba(255,255,255,.55); }
         .sup-carlos .sup-desc { font-family: Georgia, 'Times New Roman', serif; font-style: italic; }
 
-        /* #9 Aiden R — champion red with racing stripes and spotlight beams */
-        .sup-aiden { --card-bg: repeating-linear-gradient(135deg, #ee4b3b 0 18px, #d93a2b 18px 36px); --card-fg: var(--cream); --ring: conic-gradient(#fff6e6, #ffc61a, #fff6e6, #ff7a2f, #fff6e6); --pic-bg: #ffd0a8; }
-        .sup-aiden::before { content: ''; position: absolute; left: -10%; right: -10%; top: -30%; height: 95%; z-index: 0; pointer-events: none; background: conic-gradient(from 180deg at 50% 0%, transparent 0 20deg, rgba(255,255,255,.24) 25deg, transparent 32deg 45deg, rgba(255,255,255,.18) 50deg, transparent 58deg 70deg, rgba(255,255,255,.22) 75deg, transparent 82deg 360deg); }
+        /* #9 Aiden R — champion red: racing stripes, spotlight beams, checkered-flag footer  (wide banner card) */
+        .sup-aiden { --c4: 4; --c6: 4; --av: 88px; --mh: 170px; --card-bg: repeating-linear-gradient(135deg, #ee4b3b 0 18px, #d93a2b 18px 36px); --card-fg: var(--cream); --ring: conic-gradient(#fff6e6, #ffc61a, #fff6e6, #ff7a2f, #fff6e6); --pic-bg: #ffd0a8; padding: 1.5rem 1.4rem calc(1.5rem + 22px); flex-direction: row; text-align: left; gap: 1.3rem; }
+        .sup-aiden .sup-text { align-items: flex-start; flex: 1 1 0; }
+        .sup-aiden::before { content: ''; position: absolute; left: -10%; right: -10%; top: -30%; height: 95%; z-index: 0; pointer-events: none; background: conic-gradient(from 180deg at 50% 0%, transparent 0 20deg, rgba(255,255,255,.24) 25deg, transparent 32deg 60deg, rgba(255,255,255,.18) 70deg, transparent 78deg); }
+        .sup-aiden::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22px; z-index: 0; border-top: 3px solid var(--ink); background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 22px 22px; }
         .sup-aiden .sup-name { transform: skew(-8deg); font-style: italic; text-shadow: 3px 3px 0 var(--ink); }
         .sup-aiden .sup-badge { animation: bob 2s ease-in-out infinite; }
 
-        /* #10 Christopher.Jay — iridescent holographic pastel with twinkling sparkles */
-        .sup-christopher { --card-bg: linear-gradient(135deg, #ffd6f5, #d6e8ff, #d6ffe9, #fff3c9, #ffd6f5); --ring: conic-gradient(#ff7ac8, #ffd166, #7cf2c4, #7ab8ff, #c77dff, #ff7ac8); --pic-bg: #fff; background-size: 300% 300%; animation: gradientShift 8s ease infinite; }
-        .sup-christopher::before, .sup-christopher::after { content: '✦'; position: absolute; z-index: 0; font-size: 1.3rem; animation: twinkle 2.4s ease-in-out infinite; }
-        .sup-christopher::before { top: .6rem; left: .9rem; color: #ff7ac8; }
-        .sup-christopher::after { right: 1rem; bottom: .9rem; color: #7ab8ff; animation-delay: .9s; }
-        .sup-christopher .sup-name { background: linear-gradient(90deg, #d946a8, #7c5cff, #0ea5a4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        /* #10 Christopher.Jay — iridescent holographic pastel: a rainbow sheen glides across, sparkles twinkle  (medium card) */
+        .sup-christopher { --c4: 2; --c6: 2; --mh: 300px; --card-bg: linear-gradient(135deg, #ffd6f5, #d6e8ff, #d6ffe9, #fff3c9); --ring: conic-gradient(#ff7ac8, #ffd166, #7cf2c4, #7ab8ff, #c77dff, #ff7ac8); --pic-bg: #fff; }
+        .sup-christopher::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 200%; z-index: 0; pointer-events: none; opacity: .38; background: linear-gradient(100deg, #ff7ac8, #ffd166, #7cf2c4, #7ab8ff, #c77dff, #ff7ac8, #ffd166, #7cf2c4, #7ab8ff, #c77dff, #ff7ac8); animation: holoSlide 12s linear infinite; }
+        .sup-christopher::after { content: '✦  ✧  ✦'; position: absolute; top: .6rem; right: .9rem; z-index: 0; font-size: 1.2rem; letter-spacing: .15em; color: #ff7ac8; animation: twinkle 2.4s ease-in-out infinite; }
+        @keyframes holoSlide { to { transform: translateX(-50%); } }
+        .sup-christopher .sup-name { color: #b0309a; text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(124,92,255,.35); }
+
+        /* #11 Shawn — DJ booth: midnight gradient, neon ring and two equalizers bouncing at the bottom  (full-width strip) */
+        .sup-shawn { --c4: 4; --c6: 6; --av: 84px; --mh: 160px; --card-bg: linear-gradient(120deg, #1b1145, #2a1a6e 55%, #0f5a63); --card-fg: #e8fffb; --ring: conic-gradient(#2dd4bf, #f472b6, #facc15, #2dd4bf); --pic-bg: #2a1a6e; padding: 1.5rem 1.4rem calc(1.5rem + 34px); flex-direction: row; text-align: left; gap: 1.3rem; border-color: #2dd4bf; }
+        .sup-shawn .sup-text { align-items: flex-start; flex: 1 1 0; }
+        .sup-shawn::before, .sup-shawn::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 36px; z-index: 0; pointer-events: none; transform-origin: 50% 100%; }
+        .sup-shawn::before { background: repeating-linear-gradient(90deg, #2dd4bf 0 8px, transparent 8px 18px); opacity: .6; animation: eqA 1.1s ease-in-out infinite alternate; }
+        .sup-shawn::after { background: repeating-linear-gradient(90deg, transparent 0 9px, #f472b6 9px 17px, transparent 17px 18px); opacity: .5; animation: eqB 1.5s ease-in-out infinite alternate; }
+        @keyframes eqA { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+        @keyframes eqB { from { transform: scaleY(.9); } to { transform: scaleY(.3); } }
+        .sup-shawn .sup-name { color: #7ff5e6; text-shadow: 0 0 12px #2dd4bf, 2px 2px 0 #1b1145; letter-spacing: .08em; }
+        .sup-shawn .sup-initial { color: #7ff5e6; }
+        .sup-shawn .sup-desc { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: .88rem; }
 
         /* ➕ Any NEW supporter without a theme (or with theme: 'auto') gets its own automatic colour */
-        .sup-auto { --card-bg: hsl(var(--h) 90% 90%); --ring: conic-gradient(hsl(var(--h) 85% 55%), hsl(calc(var(--h) + 60) 90% 65%), hsl(var(--h) 85% 55%)); --pic-bg: hsl(var(--h) 90% 96%); }
+        .sup-auto { --c4: 2; --c6: 2; --mh: 260px; --card-bg: hsl(var(--h) 90% 90%); --ring: conic-gradient(hsl(var(--h) 85% 55%), hsl(calc(var(--h) + 60) 90% 65%), hsl(var(--h) 85% 55%)); --pic-bg: hsl(var(--h) 90% 96%); }
         .sup-auto .sup-name { color: hsl(var(--h) 70% 30%); }
+
+        /* phones: single column, but every card still gets its own height */
+        @media (max-width: 639px) {
+            .sup-nef { --mh: 340px; } .sup-cosmo { --mh: 240px; } .sup-chad { --mh: 270px; } .sup-moudir { --mh: 230px; }
+            .sup-bandar { --mh: 260px; } .sup-carlos { --mh: 290px; } .sup-christopher { --mh: 250px; } .sup-auto { --mh: 220px; }
+        }
+        /* when a wide card is dragged into the big first slot, keep room for its footer art */
+        .sup-grid .sup-honda.is-featured-slot { padding-bottom: 3.6rem; }
+        .sup-grid .sup-aiden.is-featured-slot, .sup-grid .sup-shawn.is-featured-slot { padding-bottom: calc(2.2rem + 36px); }
+
+        /* =========================================================
+           🎂 BIRTHDAY THEME — switched on by the script on Matty's birthday (html.bday-mode).
+           Berry-pink party wall, golden hero, bunting, falling confetti, rising balloons, welcome pop-up.
+           Everything animates with transform only (smooth on phones); nothing is shown on normal days.
+           ========================================================= */
+        .bday-only, .bday-theme, .bday-bunting, .bday-welcome { display: none; }
+        html.bday-mode {
+            --purple: #d7348a; --purple-l: #ee4fa0; --purple-d: #c22a7a;
+        }
+        html.bday-mode .bday-only { display: inline-block; background: var(--yellow); }
+        html.bday-mode .hero-oval { background: #ffe27a; box-shadow: 0 0 0 6px rgba(255,255,255,.35), 0 0 80px 20px rgba(255,210,63,.45); }
+        html.bday-mode .floor::before { background: repeating-conic-gradient(#fff6e6 0% 25%, #ffd23f 0% 50%) 0 0 / 110px 110px; }
+        html.bday-mode .blob { background: radial-gradient(circle, rgba(255,226,122,.4) 0%, rgba(0,0,0,0) 70%); }
+        html.bday-mode .blob-2 { background: radial-gradient(circle, rgba(67,185,234,.3) 0%, rgba(0,0,0,0) 70%); }
+        @media (max-width: 767px) { html.bday-mode .site-nav { background: rgb(215, 52, 138); } }
+        html.bday-mode .bday-theme { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 6; pointer-events: none; overflow: hidden; contain: strict; }
+        .bday-confetti { position: absolute; top: -24px; width: 9px; height: 15px; border-radius: 2px; opacity: .92; animation: bdayFall linear infinite; will-change: transform; }
+        @keyframes bdayFall { from { transform: translate3d(0, -30px, 0) rotate(0deg); } to { transform: translate3d(var(--sway, 30px), calc(100vh + 40px), 0) rotate(720deg); } }
+        .bday-balloon { position: absolute; bottom: -90px; font-size: 2.3rem; line-height: 1; animation: bdayRise linear infinite; will-change: transform; filter: drop-shadow(0 4px 0 rgba(22,17,46,.25)); }
+        @keyframes bdayRise { from { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(var(--sway, 20px), -55vh, 0); } to { transform: translate3d(0, -115vh, 0); } }
+        html.bday-mode .bday-bunting { display: flex; justify-content: space-around; align-items: flex-start; position: absolute; left: 0; right: 0; top: 4.6rem; height: 64px; z-index: 2; pointer-events: none; }
+        html.bday-mode .bday-bunting::before { content: ''; position: absolute; left: -2%; right: -2%; top: 3px; height: 4px; background: var(--ink); border-radius: 4px; }
+        .bday-flag { display: block; width: clamp(24px, 5.4vw, 52px); aspect-ratio: 1 / 1.15; margin-top: 5px; background: var(--c); clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: 50% 0; animation: flagSway 3s ease-in-out infinite alternate; }
+        @keyframes flagSway { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+
+        html.bday-mode .bday-welcome { position: fixed; inset: 0; z-index: 200000; padding: 1.2rem; align-items: center; justify-content: center; background: rgba(22,17,46,.82); opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
+        html.bday-mode .bday-welcome { display: flex; }
+        html.bday-mode .bday-welcome.is-open { opacity: 1; visibility: visible; transition: opacity .35s ease; }
+        .bday-welcome-card { position: relative; width: 100%; max-width: 420px; text-align: center; color: var(--ink); background: repeating-conic-gradient(from 0deg at 50% 38%, #ffe27a 0 8deg, #ffd23f 8deg 16deg); border: 5px solid var(--ink); border-radius: 30px; box-shadow: 10px 10px 0 var(--ink); padding: 2rem 1.5rem 2.2rem; transform: scale(.6) rotate(-4deg); transition: transform .5s cubic-bezier(.2,.9,.3,1.5); }
+        .bday-welcome.is-open .bday-welcome-card { transform: scale(1) rotate(0); }
+        .bday-welcome-cake { font-size: 4.2rem; line-height: 1; animation: bob 2.4s ease-in-out infinite; }
+        .bday-welcome-title { font-family: 'Dela Gothic One', 'Arial Black', sans-serif; font-weight: 400; font-size: clamp(2rem, 8vw, 2.8rem); line-height: 1.05; text-transform: uppercase; margin: .8rem 0 .7rem; color: var(--cream); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; text-shadow: 0 .06em 0 var(--orange), 0 .12em 0 var(--red), 0 .18em 0 var(--ink); }
+        .bday-welcome-text { font-weight: 800; font-size: 1rem; line-height: 1.5; margin: 0 auto 1.4rem; max-width: 20rem; }
+        @media (prefers-reduced-motion: reduce) { html.bday-mode .bday-theme { display: none !important; } }
 
         /* =========================================================
            RESPONSIVE REFINEMENTS  (phones · tablets · desktops · landscape)
@@ -1093,7 +1190,6 @@
             .sup-nef { animation: none; box-shadow: 0 0 0 5px var(--orange), 9px 9px 0 5px var(--ink), 0 0 30px 8px rgba(255,198,26,.55); }
             .sup-lobo .sup-avatar { animation: none; box-shadow: 0 0 0 7px rgba(16,185,129,.22); }
             .sup-christopher { animation: none; }
-            .sup-honda::after { animation: none; }
         }
         @media (max-width: 767px) {
             /* a frosted-glass bar over scrolling content is re-blurred every frame — use a solid colour */
@@ -1364,6 +1460,16 @@
 
     <div class="scroll-progress" aria-hidden="true"><i></i></div>
 
+    <!-- 🎂 BIRTHDAY THEME layer (empty and hidden on normal days; filled by initBirthdayTheme() in the script) -->
+    <div class="bday-theme" aria-hidden="true"></div>
+    <div class="bday-welcome" id="bdayWelcome" role="dialog" aria-modal="true" aria-labelledby="bdayWelcomeTitle">
+        <div class="bday-welcome-card">
+            <div class="bday-welcome-cake" aria-hidden="true">🎂</div>
+            <h2 id="bdayWelcomeTitle" class="bday-welcome-title">It's Matty's<br>birthday!</h2>
+            <p class="bday-welcome-text">The whole site got dressed up for the party 🎉 Say happy birthday and enjoy the confetti!</p>
+            <button type="button" class="btn-chunky btn-orange" data-bday-close>LET'S PARTY 🥳</button>
+        </div>
+    </div>
     <div class="animated-bg" aria-hidden="true">
         <div class="blob"></div>
         <div class="blob blob-2"></div>
@@ -1498,6 +1604,7 @@
     <!-- ===================== HERO ===================== -->
     <section id="top" class="hero" aria-labelledby="hero-title">
         <div class="hero-oval" aria-hidden="true"></div>
+        <div class="bday-bunting" aria-hidden="true"></div>
         <svg class="cloud" style="left:2%;top:15%" viewBox="0 0 200 100" aria-hidden="true"><use href="#cloud"/></svg>
         <svg class="cloud" style="right:3%;top:30%;animation-duration:18s" viewBox="0 0 200 100" aria-hidden="true"><use href="#cloud"/></svg>
         <svg class="cloud" style="left:-3%;bottom:34%;animation-duration:22s" viewBox="0 0 200 100" aria-hidden="true"><use href="#cloud"/></svg>
@@ -1511,7 +1618,7 @@
         <div class="mood-strip" aria-hidden="true"><span class="m1">Chill</span><span class="m2">Funny</span><span class="m3">Smart</span><span class="m4">Kind</span><span class="m5">Elite</span></div>
 
         <div class="relative z-10" data-aos="zoom-out">
-            <div class="hero-pills"><span class="pill">MT-SS/26 — NO.001</span><span class="pill">100% Cute</span></div>
+            <div class="hero-pills"><span class="pill">MT-SS/26 — NO.001</span><span class="pill">100% Cute</span><span class="pill bday-only">🎂 Today's the day!</span></div>
             <h1 id="hero-title" class="stack-title st-xl">MATTY.</h1>
             <p class="tagline">The cute and the only cute</p>
         </div>
@@ -1557,11 +1664,24 @@
                 <!-- ✏️ character art: leaning on the "about" card -->
                 <div class="char-parallax char-lean"><div class="char-parallax-track"><div class="char-card" style="--r:-6deg;" :class="activeChar === 'lean' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Say hi to Matty" @click.stop="openChar('lean')" @keydown.enter.prevent="openChar('lean')" @keydown.space.prevent="openChar('lean')"></div></div></div>
             </div>
-            <div class="age-card-live" data-aos="fade-left">
+            <div class="age-card-live" :class="truthFound ? 'is-verified' : ''" data-aos="fade-left">
                 <svg class="spark" style="left:8%;top:12%" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
                 <svg class="spark" style="right:9%;bottom:24%;animation-delay:1s" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
-                <span class="age-label">Verified Identity Age</span>
-                <div class="age-number font-display" :class="mattyAge === realAge ? 'bump' : ''" x-text="mattyAge" aria-live="polite"></div>
+                <span class="age-label" x-text="truthFound ? 'Age Confirmed ✓' : 'Verified Identity Age'">Verified Identity Age</span>
+                <div class="age-stamp" x-show="truthFound" x-cloak>✔ CONFIRMED</div>
+                <template x-if="truthFound">
+                    <div aria-hidden="true">
+                        <span class="age-fl" style="left:12%;bottom:30%">💛</span>
+                        <span class="age-fl" style="left:50%;bottom:24%;animation-delay:1.1s">✨</span>
+                        <span class="age-fl" style="right:14%;bottom:32%;animation-delay:2.2s">💚</span>
+                    </div>
+                </template>
+                <div class="age-wrap">
+                    <div class="age-number font-display" :class="mattyAge === realAge ? 'bump' : ''" x-text="mattyAge" aria-live="polite"></div>
+                    <span class="age-sus" aria-hidden="true" x-show="!truthFound"><b>!</b><b>?</b></span>
+                </div>
+                <p class="age-hint" x-show="!truthFound">Hmm… is that <em>really</em> the number? 🤨 Curious minds might know a way to check 🔍</p>
+                <p class="age-hint" x-show="truthFound" x-cloak>Checked, double-checked and officially confirmed 💛</p>
                 <!-- ✏️ EDIT: TikTok link -->
                 <a href="https://www.tiktok.com/@mateo_vvg" target="_blank" rel="noopener noreferrer" class="tiktok-inner"><i class="fab fa-tiktok"></i><span>FOLLOW ON TIKTOK</span></a>
             </div>
@@ -1645,11 +1765,11 @@
             <!-- ✏️ EDIT: gallery photos live in the GALLERY list near the top of the <script> at the bottom of this file -->
             <div class="photo-wall">
                 <template x-for="(p, i) in GALLERY" :key="p.title">
-                    <button type="button" class="polaroid" @click="lightbox = p" data-aos="zoom-in" :data-aos-delay="(i % 4) * 90">
+                    <button type="button" class="polaroid" @click="lightbox = p" data-aos="fade-in" :data-aos-delay="(i % 4) * 60">
                         <span class="polaroid-pin" aria-hidden="true">📌</span>
                         <div class="polaroid-frame">
                             <div class="win-bar" aria-hidden="true"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                            <img :src="p.url" :alt="p.title" :width="p.w || 1080" :height="p.h || 1350" decoding="sync" @load="$el.classList.add('is-loaded')" x-init="$el.complete && $el.naturalWidth && $el.classList.add('is-loaded')" @error="$el.closest('.polaroid').remove()">
+                            <img :src="(window.GALLERY_THUMBS && GALLERY_THUMBS[p.url]) || (assetsReady ? p.url : null)" :alt="p.title" :width="p.w || 1080" :height="p.h || 1350" decoding="async" @load="$el.classList.add('is-loaded'); $el.parentElement.classList.add('is-ready')" x-init="$el.complete && $el.naturalWidth && ($el.classList.add('is-loaded'), $el.parentElement.classList.add('is-ready'))" @error="$el.closest('.polaroid').remove()">
                         </div>
                         <div class="polaroid-cap">
                             <span class="t" x-text="p.title"></span>
@@ -1724,7 +1844,7 @@
                 <!-- ✏️ character art: raising a toast to the VIP Supporters -->
                 <div class="char-parallax char-toast"><div class="char-parallax-track"><div class="char-card" style="--r:-5deg;" :class="activeChar === 'toast' ? 'is-picked' : ''" role="button" tabindex="0" aria-label="Raise a toast with Matty" @click.stop="openChar('toast')" @keydown.enter.prevent="openChar('toast')" @keydown.space.prevent="openChar('toast')"></div></div></div>
             </div>
-            <div class="sup-grid" data-aos="fade-up">
+            <div class="sup-grid">
                 <template x-for="(v, i) in supporters" :key="v.name">
                     <article class="sup-card" :class="['sup-' + (v.theme || 'auto'), i === 0 ? 'is-featured-slot' : '']" :data-name="v.name" :style="`--i:${i}; --h:${(i * 47) % 360}`" @click="v.theme === 'nef' && playNefSong()">
                         <!-- 🖐 drag handle: press and drag to reorder. Whichever card lands in slot #1 becomes the big card. -->
@@ -1825,10 +1945,14 @@
                                 <input id="cm-from" class="cm-input" type="text" maxlength="18" autocomplete="off" placeholder="Your name" x-model="from">
                             </div>
                         </div>
+                        <div x-show="occasion === 'custom'" x-cloak>
+                            <label class="cm-label" for="cm-title">Your own title</label>
+                            <input id="cm-title" class="cm-input" type="text" maxlength="24" autocomplete="off" placeholder="e.g. Best Friend Ever" x-model="title">
+                        </div>
                         <div>
                             <label class="cm-label" for="cm-msg">Your own message (optional)</label>
-                            <textarea id="cm-msg" class="cm-input" rows="2" maxlength="90" placeholder="Leave empty for a ready-made message" x-model="msg"></textarea>
-                            <span class="cm-count" aria-hidden="true"><span x-text="msg.length"></span>/90</span>
+                            <textarea id="cm-msg" class="cm-input" rows="3" maxlength="200" placeholder="Leave empty for a ready-made message" x-model="msg"></textarea>
+                            <span class="cm-count" aria-hidden="true"><span x-text="msg.length"></span>/200</span>
                         </div>
                     </div>
                 </article>
@@ -2024,8 +2148,16 @@
            ✏️ EDITABLE SETTINGS — change these values to customise
            ========================================================= */
         const SITE = {
-            fakeAge: 22,   // ✏️ age shown before the secrets are found
-            realAge: 25    // ✏️ age revealed when all 3 secrets are found
+            fakeAge: 22,      // ✏️ age shown before the secrets are found
+            birthYear: 2000,  // ✏️ the year Matty was born — his real age is worked out from this + BIRTHDAY, so it goes up by itself every year on his birthday
+            // age revealed when all 3 secrets are found (25 until Dec 29, 2026, then 26, and so on)
+            get realAge() {
+                const n = new Date();
+                let age = n.getFullYear() - this.birthYear;
+                const before = (n.getMonth() + 1 < BIRTHDAY.month) || (n.getMonth() + 1 === BIRTHDAY.month && n.getDate() < BIRTHDAY.day);
+                if (before && !birthdayMode()) age--; // (in birthday preview mode he already counts as the new age)
+                return age;
+            }
         };
         /* =========================================================================
            ✏️ VIP SUPPORTERS — HOW TO ADD MORE SUPPORTERS (no other code needed!)
@@ -2040,7 +2172,7 @@
                            If the link is empty or broken, a circle with the first letter of the name shows instead.
                 • badge  → ONE emoji shown on the corner of the picture (optional)
                 • theme  → the visual style of the card. Choose one of:
-                           'nef'  'goat'  'cosmo'  'chad'  'honda'  'moudir'  'bandar'  'lobo'  'carlos'  'aiden'  'christopher'
+                           'nef'  'goat'  'cosmo'  'chad'  'honda'  'moudir'  'bandar'  'lobo'  'carlos'  'aiden'  'christopher'  'shawn'
                            …or write 'auto' (or leave theme out) and the site gives that supporter its own colour automatically.
            4. Every line MUST end with a comma. The ORDER of the list = the ORDER on the page.
            5. Want someone extra special?
@@ -2063,23 +2195,23 @@
             // (Visitors can also drag cards around live on the page — this list is just the starting order.)
 
             // ⭐ position #1 = the BIG card that takes a full row
-            { name: 'Gregdub',          desc: 'He really believes he could beat Matty in literally anything 🐐',      img: '', theme: 'goat',        badge: '🐐', crown: true, ribbon: '★ Top Supporter' },
+            { name: 'Gregdub',          desc: 'Certified GOAT (certified by himself). Has never lost to Matty, as long as nobody checks the replays 🐐',      img: '', theme: 'goat',        badge: '🐐', crown: true, ribbon: '★ Top Supporter' },
 
             // 🌟 SPECIAL supporter = normal size but gold, glowing and sparkling (theme: 'nef' + sparkle: true) — tap his card to play the song!
             { name: 'Nef', desc: 'He love this song "EVERYTHING IS AWESOME🎶"', img: 'images/nef.jpg', theme: 'nef', badge: '🎶', sparkle: true },
 
             // ⬇️ REGULAR supporters — add new lines here
-            { name: 'c.o.s.m.o',        desc: 'Nobody has ever seen him offline — legend says he simply never left 🪐',     img: '', theme: 'cosmo',       badge: '🪐' },
-            { name: 'chad',             desc: 'He walks in like the room was built just for him 👑',                        img: '', theme: 'chad',        badge: '👑' },
-            { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
-            { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
-            { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
+            { name: 'c.o.s.m.o',        desc: 'Last seen online: always. Scientists are still studying how he never sleeps 🪐',     img: '', theme: 'cosmo',       badge: '🪐' },
+            { name: 'chad',             desc: 'Walks in like the room was decorated for him. The Wi-Fi password is probably his birthday 👑',                        img: '', theme: 'chad',        badge: '👑' },
+            { name: 'Honda',            desc: 'Our unofficial doctor. Prescribes memes, hugs and exactly one dramatic sigh for every bad mood 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
+            { name: 'Moudir',           desc: 'Every video drops on time because he said so. Nobody dares ask "is it done yet?" 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
+            { name: 'Bandar',           desc: 'Shows up with snacks nobody ordered and somehow it\'s exactly what the day needed. Sugar levels: legendary 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
             // 💤 lobo is hidden for now — delete the "// " at the start of the next line to bring him back
             // { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
-            { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
-            { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
-            { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
-            { name: 'Shawn',            desc: 'He can turn any random Tuesday into main character energy 🎧',              img: '', theme: 'auto',        badge: '🎧' }
+            { name: 'Carlos C',         desc: 'Cool before cool was cool. Gold-plated confidence, zero effort required 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
+            { name: 'Aiden R',          desc: 'Arrives fashionably late, steals the whole show, leaves with the trophy. Nobody is even mad 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
+            { name: 'Christopher.Jay',  desc: 'Checks the mirror twice, just to make sure the sparkle still works. Spoiler: it does ✨',    img: '', theme: 'christopher', badge: '🌸' },
+            { name: 'Shawn',            desc: 'Can turn a random Tuesday into a main-character montage with one (1) playlist 🎧', img: '', theme: 'shawn',       badge: '🎧' }
             // ➕ paste new supporters ABOVE this line (and add a comma after the previous supporter's  }  )
         ];
 
@@ -2330,6 +2462,11 @@
            down to the NEXT one, so it never needs updating each year.
            ========================================================= */
         const BIRTHDAY = { month: 12, day: 29 };
+        // 🎂 BIRTHDAY THEME — on the birthday (the visitor's local date) the whole site switches to a party theme.
+        // To PREVIEW it any day, open the site with  ?birthday=1  at the end of the address (e.g. index.html?birthday=1).
+        const BDAY_PREVIEW = /[?&]birthday=1\b/.test(location.search);
+        function isBirthdayToday() { const n = new Date(); return n.getMonth() + 1 === BIRTHDAY.month && n.getDate() === BIRTHDAY.day; }
+        function birthdayMode() { return BDAY_PREVIEW || isBirthdayToday(); }
         function birthdayCountdown() {
             return {
                 d: 0, h: 0, m: 0, s: 0, isToday: false, label: '', sub: '', bursted: false,
@@ -2349,7 +2486,7 @@
                     const now = new Date(), y = now.getFullYear();
                     let target = new Date(y, BIRTHDAY.month - 1, BIRTHDAY.day, 0, 0, 0);
                     const dayEnd = new Date(y, BIRTHDAY.month - 1, BIRTHDAY.day + 1, 0, 0, 0);
-                    if (now >= target && now < dayEnd) {
+                    if (birthdayMode() || (now >= target && now < dayEnd)) {
                         this.isToday = true;
                         this.label = target.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + ' · Today!';
                         this.sub = "It's the big day — send some love!";
@@ -2370,6 +2507,49 @@
         }
 
         /* =========================================================
+           🎂 BIRTHDAY THEME (builds the party decorations + welcome pop-up). Does nothing on normal days.
+           ========================================================= */
+        (function initBirthdayTheme() {
+            if (!birthdayMode()) return;
+            const root = document.documentElement; root.classList.add('bday-mode');
+            const go = () => {
+                const small = window.innerWidth < 640, rnd = (a, b) => a + Math.random() * (b - a);
+                const cols = ['#ffc61a', '#26b5a9', '#43b9ea', '#fff6e6', '#ff7a2f', '#7a6df0', '#ffffff'];
+                const layer = document.querySelector('.bday-theme');
+                if (layer) {
+                    let h = '';
+                    for (let i = 0; i < (small ? 12 : 24); i++) h += `<i class="bday-confetti" style="left:${rnd(0, 100).toFixed(1)}%;background:${cols[i % cols.length]};--sway:${rnd(-60, 60).toFixed(0)}px;animation-duration:${rnd(6, 11).toFixed(1)}s;animation-delay:-${rnd(0, 11).toFixed(1)}s;${i % 3 === 0 ? 'border-radius:50%;width:10px;height:10px;' : ''}"></i>`;
+                    ['🎈', '🎈', '🎈', '🎈', '🎈', '🎈', '🎈'].slice(0, small ? 4 : 7).forEach((b, i) => {
+                        h += `<span class="bday-balloon" style="left:${(8 + i * (small ? 22 : 13) + rnd(-3, 3)).toFixed(0)}%;--sway:${rnd(-30, 30).toFixed(0)}px;animation-duration:${rnd(11, 17).toFixed(1)}s;animation-delay:-${rnd(0, 14).toFixed(1)}s">${['🎈', '🎈', '🎊', '🎈', '🎉', '🎈', '🎈'][i]}</span>`;
+                    });
+                    layer.innerHTML = h;
+                }
+                const bun = document.querySelector('.bday-bunting');
+                if (bun) {
+                    const flags = ['#ffc61a', '#26b5a9', '#43b9ea', '#fff6e6', '#ff7a2f', '#7a6df0'], n = small ? 9 : 16;
+                    bun.innerHTML = Array.from({ length: n }, (_, i) => `<i class="bday-flag" style="--c:${flags[i % flags.length]};animation-delay:-${(i * 0.37).toFixed(2)}s"></i>`).join('');
+                }
+                const tag = document.querySelector('.tagline'); if (tag) tag.textContent = 'Happy birthday to the cutest 🎂';
+                // one-time welcome pop-up (once per visit), shown after the yellow loading screen has lifted
+                const wel = document.getElementById('bdayWelcome');
+                if (wel) {
+                    const close = () => { wel.classList.remove('is-open'); try { sessionStorage.setItem('matty-bday-seen', '1'); } catch (e) {} };
+                    wel.addEventListener('click', (e) => { if (e.target === wel || e.target.closest('[data-bday-close]')) { close(); birthdayFx(); } });
+                    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wel.classList.contains('is-open')) close(); });
+                    let seen = false; try { seen = sessionStorage.getItem('matty-bday-seen') === '1'; } catch (e) {}
+                    if (!seen || BDAY_PREVIEW) {
+                        let tries = 0;
+                        const t = setInterval(() => {
+                            const ld = document.querySelector('.loader');
+                            if ((ld && ld.classList.contains('is-ready')) || ++tries > 40) { clearInterval(t); setTimeout(() => { wel.classList.add('is-open'); birthdayFx(); const b = wel.querySelector('[data-bday-close]'); b && b.focus({ preventScroll: true }); }, 700); }
+                        }, 250);
+                    }
+                }
+            };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+        })();
+
+        /* =========================================================
            ✏️ GREETING CARD MAKER
            CARD_OCCASIONS = the occasion buttons. head = the big title (1-2 lines),
            line = the ready-made message used when the visitor writes none.
@@ -2380,7 +2560,7 @@
             { id: 'congrats', label: 'Congrats 🎉',     head: ['CONGRATS!'],         line: 'So proud of you. You absolutely crushed it!' },
             { id: 'thanks',   label: 'Thank you 💜',    head: ['THANK', 'YOU'],      line: 'You make everything better just by being you.' },
             { id: 'luck',     label: 'Good luck 🍀',    head: ['GOOD', 'LUCK'],      line: "Go show them what you've got. You were made for this!" },
-            { id: 'eid',      label: 'Eid 🌙',          head: ['EID', 'MUBARAK'],    line: 'May your day be full of joy, family and sweets.' },
+            { id: 'custom',   label: 'Custom ✍️',       head: ['MY OWN', 'CARD'],    line: 'Write your own title and message — anything you like!' },
             { id: 'hey',      label: 'Just because ✨', head: ['HEY', 'YOU!'],       line: 'Just a little card to remind you that you are awesome.' }
         ];
         const CARD_CHAR_LABELS = { 'lean': 'Leaning Matty', 'point-up': 'Matty pointing up', 'lookdown': 'Matty looking down', 'toast': 'Matty cheering', 'shoulder': 'Matty peeking', 'point-side': 'Matty pointing', 'heart': 'Matty with a heart' };
@@ -2402,6 +2582,25 @@
             if (cur) lines.push(cur);
             if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
             return lines;
+        }
+        // splits very long words so nothing can ever run off the card
+        function cardBreakWord(ctx, word, maxW) {
+            const parts = []; let cur = '';
+            for (const ch of word) { if (cur && ctx.measureText(cur + ch).width > maxW) { parts.push(cur); cur = ch; } else cur += ch; }
+            if (cur) parts.push(cur); return parts;
+        }
+        // ✏️ ALWAYS FITS: tries a big font first and shrinks the message until all of it fits inside the speech bubble
+        function cardFitText(ctx, text, BODY, maxW, maxBubbleH) {
+            for (let size = 36; size >= 20; size -= 2) {
+                ctx.font = '800 ' + size + 'px ' + BODY;
+                const lh = Math.round(size * 1.32), words = [];
+                text.split(' ').forEach((w) => { if (ctx.measureText(w).width > maxW) words.push(...cardBreakWord(ctx, w, maxW)); else words.push(w); });
+                const lines = cardWrap(ctx, words.join(' '), maxW, 99), bh = 44 + lines.length * lh;
+                if (bh <= maxBubbleH || size === 20) {
+                    if (bh > maxBubbleH) { const max = Math.max(1, Math.floor((maxBubbleH - 44) / lh)); if (lines.length > max) { lines.length = max; lines[max - 1] = lines[max - 1].replace(/\s*\S*$/, '') + '…'; } }
+                    return { lines, lh, size, bh: 44 + lines.length * lh };
+                }
+            }
         }
         async function drawCard(cv, st) {
             const ctx = cv.getContext('2d'), W = 1080, H = 1350;
@@ -2448,7 +2647,7 @@
             const lines = occ.head; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
             ctx.font = '400 100px ' + DISPLAY;
             const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
-            const size = Math.max(60, Math.min(lines.length > 1 ? 108 : 125, 100 * 820 / widest)); // 2-line titles are a bit smaller so their stacked shadows never touch
+            const size = Math.max(34, Math.min(lines.length > 1 ? 108 : 125, 100 * 880 / widest)); // 2-line titles are a bit smaller so their stacked shadows never touch
             ctx.font = '400 ' + size + 'px ' + DISPLAY;
             const layers = ['#ffa53a', '#ff7a2f', '#ee4b3b', '#26b5a9', INK], step = size * 0.07;
             lines.forEach((l, i) => {
@@ -2473,13 +2672,14 @@
             });
 
             // speech bubble with the message
-            ctx.font = '800 36px ' + BODY; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-            const text = st.msg || occ.line, tl = cardWrap(ctx, text, 780, 3), bh = 44 + tl.length * 48, by = 1022;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            const text = st.msg || occ.line, fit = cardFitText(ctx, text, BODY, 780, 190), tl = fit.lines, bh = fit.bh, by = 1022;
+            ctx.font = '800 ' + fit.size + 'px ' + BODY;
             ctx.fillStyle = INK; cardRR(ctx, 110 + 10, by + 12, 860, bh, 34); ctx.fill();
             ctx.fillStyle = CREAM; ctx.strokeStyle = INK; ctx.lineWidth = 8; cardRR(ctx, 110, by, 860, bh, 34); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(500, by); ctx.lineTo(540, by - 34); ctx.lineTo(580, by); ctx.closePath(); ctx.fillStyle = CREAM; ctx.fill(); ctx.stroke();
             ctx.fillStyle = CREAM; ctx.fillRect(504, by - 5, 72, 12);
-            ctx.fillStyle = INK; tl.forEach((l, i) => ctx.fillText(l, 540, by + 56 + i * 48));
+            ctx.fillStyle = INK; tl.forEach((l, i) => ctx.fillText(l, 540, by + 22 + fit.size * 0.95 + i * fit.lh));
 
             // To / From name tags
             const pill = (label, x, align, col) => {
@@ -2496,13 +2696,24 @@
             return {
                 chars: Object.keys(CHAR_DATA).map((k) => ({ key: k, img: CHAR_DATA[k].img, label: CARD_CHAR_LABELS[k] || k })),
                 occasions: CARD_OCCASIONS,
-                character: 'lean', occasion: 'birthday', to: '', from: '', msg: '', status: '',
+                character: 'lean', occasion: 'birthday', to: '', from: '', msg: '', title: '', status: '',
                 _tok: 0, _raf: null,
                 get canShare() { return !!(navigator.share && navigator.canShare); },
-                get occ() { return this.occasions.find((o) => o.id === this.occasion) || this.occasions[0]; },
+                get occ() {
+                    const o = this.occasions.find((x) => x.id === this.occasion) || this.occasions[0];
+                    const t = (this.title || '').trim().replace(/\s+/g, ' ').toUpperCase();
+                    if (o.id !== 'custom' || !t) return o;
+                    const w = t.split(' '); let head = [t];
+                    if (w.length > 1 && t.length > 9) { // two balanced lines
+                        let best = 1, diff = 1e9;
+                        for (let i = 1; i < w.length; i++) { const d = Math.abs(w.slice(0, i).join(' ').length - w.slice(i).join(' ').length); if (d < diff) { diff = d; best = i; } }
+                        head = [w.slice(0, best).join(' '), w.slice(best).join(' ')];
+                    }
+                    return Object.assign({}, o, { head });
+                },
                 get ariaLabel() { return 'Preview of your card: ' + this.occ.head.join(' ') + (this.to ? ', to ' + this.to : '') + (this.from ? ', from ' + this.from : ''); },
                 init() {
-                    ['character', 'occasion', 'to', 'from', 'msg'].forEach((k) => this.$watch(k, () => this.schedule()));
+                    ['character', 'occasion', 'to', 'from', 'msg', 'title'].forEach((k) => this.$watch(k, () => this.schedule()));
                     this.schedule();
                     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.schedule());
                 },
@@ -2613,7 +2824,7 @@
              its sender for rejectedShowHours hours, then disappears from their device
            ========================================================= */
         const GUESTBOOK = {
-            url: 'https://script.google.com/macros/s/AKfycbxdC8IbSU35NFaX3ha2a_8wlYH9nYlNquEfeQmjWCGhpm7rCehqXnRLVdAxveiChSUV/exec',               // ✏️ paste your Apps Script Web app URL here (ends with /exec)
+            url: '',               // ✏️ paste your Apps Script Web app URL here (ends with /exec)
             cooldownDays: 7,
             rejectedShowHours: 24,
             pageSize: 24
@@ -2762,7 +2973,7 @@
         function gameSystem() {
             return {
                 gameActive: false, showWinModal: false, showGamesMenu: false, currentGame: null,
-                score: 0, mX: -200, mY: -200, targets: [], mattyAge: SITE.fakeAge, realAge: SITE.realAge,
+                score: 0, mX: -200, mY: -200, targets: [], mattyAge: SITE.fakeAge, realAge: SITE.realAge, truthFound: false,
                 snakeGameInt: null, snakeD: 'RIGHT', snakeScore: 0, gameVictory: false,
                 memoryCards: [], flippedCards: [], toast: { show: false, text: '' },
                 escapeLvl: 0, escapeSize: 50, escapePieces: [],
@@ -2786,6 +2997,28 @@
                         this.loadProgress = Math.round((done / total) * 100);
                         if (done >= total) this.assetsReady = true;
                     };
+                    // ⚡ LIGHT GALLERY PHOTOS — the gallery shows small, screen-sized copies of the photos (made
+                    // once, right here, while the yellow loading screen is up). Full-size originals are only
+                    // used in the big pop-up view. Big originals (3000px+) are what made phones stutter while
+                    // scrolling, because the phone has to decode millions of pixels for every photo.
+                    window.GALLERY_THUMBS = window.GALLERY_THUMBS || {};
+                    const galUrls = new Set(GALLERY.map(p => p.url));
+                    const makeThumb = (img, url) => new Promise((res) => {
+                        try {
+                            const maxW = window.innerWidth < 640 ? 720 : 900;
+                            const sc = Math.min(1, maxW / img.naturalWidth);
+                            if (!img.naturalWidth || sc > 0.97) { res(); return; } // already small enough
+                            const cv = document.createElement('canvas');
+                            cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
+                            const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high';
+                            cx.drawImage(img, 0, 0, cv.width, cv.height);
+                            cv.toBlob((b) => {
+                                if (!b) { res(); return; }
+                                const u = URL.createObjectURL(b), t = new Image(); t.src = u;
+                                (t.decode ? t.decode() : Promise.resolve()).catch(() => {}).then(() => { window.GALLERY_THUMBS[url] = u; res(); });
+                            }, 'image/jpeg', 0.86);
+                        } catch (e) { res(); } // e.g. opened from file:// (canvas blocked) → just use the original photo
+                    });
                     urls.forEach((src) => {
                         const img = new Image();
                         img.src = src;
@@ -2798,7 +3031,7 @@
                         // picture the instant it's scrolled to — it just appears, it's never
                         // being fetched or decoded in that moment.
                         if (img.decode) {
-                            img.decode().then(bump).catch(bump); // broken/unsupported image: never block the page
+                            img.decode().then(() => (galUrls.has(src) ? makeThumb(img, src) : null)).then(bump, bump); // broken/unsupported image: never block the page
                         } else {
                             img.onload = bump;
                             img.onerror = bump;
@@ -2875,7 +3108,7 @@
                     if(this.targets[index].clicked) return;
                     this.targets[index].clicked = true; this.score++;
                     cf({ particleCount: 60, spread: 70, origin: { x: this.mX / window.innerWidth, y: this.mY / window.innerHeight } });
-                    if (this.score === 3) { setTimeout(() => { this.mattyAge = this.realAge; this.showWinModal = true; }, 500); }
+                    if (this.score === 3) { setTimeout(() => { this.mattyAge = this.realAge; this.truthFound = true; this.showWinModal = true; }, 500); }
                 },
 
                 startSnake() {
