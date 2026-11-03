@@ -21,6 +21,7 @@ Visual identity: purple checkerboard wall, pink floor, chunky stacked-shadow typ
 - **Easter egg**: tap the **MATTY** logo 5 times quickly to trigger a "Matty Party" that plays every character's effect in sequence
 - **Greeting card maker** — visitors pick a character, an occasion (Birthday, Congrats, Thank you, Good luck, Eid, Just because), optionally add *To* / *From* names and their own message, then **save the card as a PNG** or share it with the phone's native share sheet
 - **Visitor counter** — an odometer-style "Matty Fans So Far" counter; each device is counted once
+- **Notes Wall** — a moderated guestbook: visitors leave a note, see it as a private preview ("pending review"), and it goes public only after you approve it in a Google Sheet
 - **Single yellow loading screen** that waits until every gallery and character image is fully loaded and decoded, then slides away — so images simply *appear* while scrolling
 - Responsive on phones, tablets and desktops; respects `prefers-reduced-motion`; keyboard accessible with ARIA labels
 
@@ -31,6 +32,7 @@ Visual identity: purple checkerboard wall, pink floor, chunky stacked-shadow typ
 ```
 /
 ├── index.html                     ← the whole site
+├── guestbook.gs                   ← Google Apps Script backend for the Notes Wall (paste into Apps Script, not uploaded to the site)
 ├── README.md
 ├── images/
 │   ├── aura.jpg                   ← gallery photos (see GALLERY)
@@ -119,6 +121,7 @@ Change the month (1–12) and day. It always counts down to the *next* occurrenc
 
 - **Order = order on the page.** The first entry becomes the big full-width card (visitors can also drag cards live).
 - `img: ''` shows a circle with the first letter of the name instead of a photo.
+- To hide a supporter without deleting them, put `// ` in front of their line (as done for `lobo`).
 - `theme` picks the card style: `goat`, `cosmo`, `chad`, `honda`, `moudir`, `bandar`, `lobo`, `carlos`, `aiden`, `christopher`, `nef`, or `auto` (automatic colour).
 - To invent a new look, copy any `.sup-<theme>` CSS block, rename it, and use the new name as `theme`.
 - Paste new supporters above the "paste new supporters ABOVE this line" comment, and keep the commas.
@@ -138,6 +141,35 @@ const VISITOR_COUNTER = { enabled: true, namespace: 'mateo-matty-site', key: 'vi
 - A device is counted once (remembered in the browser's local storage). If storage is blocked, the number is shown but not increased. If the service is unreachable, the counter shows a friendly "taking a nap" message instead of a fake number.
 - Set `enabled: false` to hide the section completely.
 - Privacy note: loading the counter sends a request to the Abacus service (like any third-party request, it sees the visitor's IP address).
+
+### Notes Wall — `GUESTBOOK` + `guestbook.gs`
+
+```js
+const GUESTBOOK = { url: '', cooldownDays: 7, rejectedShowHours: 24, pageSize: 24 };
+```
+
+**How it works**
+
+1. A visitor writes a note (name + message, no links). It appears **only to them** as a preview with a "pending review" badge.
+2. The note is saved in your Google Sheet with the status **Pending**, and an email is sent to the address set in `guestbook.gs` (`NOTIFY_EMAIL`).
+3. You change the status in column E to **Approved** — the note appears on the public wall right away. Set **Rejected** and the sender sees "wasn't approved" for 24 hours (`rejectedShowHours`), then the note disappears from their device.
+4. One note per device every **7 days** (`COOLDOWN_DAYS` in the script and `cooldownDays` on the site).
+
+**Setup (about 10 minutes)**
+
+1. Create a new Google Sheet.
+2. *Extensions → Apps Script*, paste the whole of `guestbook.gs`, save.
+3. Pick the function `setup` and press **Run** (allow the permissions — Google calls it "unsafe" only because you wrote it). This builds the `Messages` tab with a status dropdown.
+4. *Deploy → New deployment → Web app* — Execute as **Me**, access **Anyone** → Deploy → copy the URL ending in `/exec`.
+5. Paste it into `GUESTBOOK.url` in `index.html`. Until you do, the section shows a friendly "still being set up" message and the form is disabled.
+
+After editing the script later: *Deploy → Manage deployments → Edit → Version: New version → Deploy* (the URL stays the same).
+
+**Good to know**
+
+- Notes are shown as plain text (never HTML), links are blocked, and a hidden honeypot field plus a site-wide rate limit stop most bots.
+- The one-note-per-week limit is tied to the device's browser storage and a device id saved in the sheet (hidden column F); a determined visitor could bypass it by clearing storage.
+- Visitors' notes and names are stored in your sheet; mention it in your privacy notice if you publish the site widely.
 
 ### Other editable values
 
