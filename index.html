@@ -896,15 +896,13 @@
         .sup-bandar:hover { animation: wobble .7s ease; }
         @keyframes wobble { 0%, 100% { transform: translateY(-6px) rotate(-1deg); } 25% { transform: translateY(-6px) rotate(3deg); } 75% { transform: translateY(-6px) rotate(-3deg); } }
 
-        /*
-        #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow 
+        /* #7 lobo — soft mint, leaf-shaped corners, pulsing heart glow */
         .sup-lobo { --card-bg: radial-gradient(circle at 50% 0%, #f0fff5 0, #c8f3d8 100%); --ring: conic-gradient(#34d399, #a7f3d0, #10b981, #34d399); --pic-bg: #d1fae5; border-radius: 44px 10px 44px 10px; }
         .sup-lobo .sup-name { color: #047857; }
         .sup-lobo .sup-avatar { animation: heartGlow 2.2s ease-in-out infinite; }
         .sup-lobo::after { content: '💚'; position: absolute; top: .6rem; right: .9rem; font-size: 1.2rem; z-index: 0; animation: floatUp 3s ease-in-out infinite; }
         @keyframes heartGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 0 10px rgba(16,185,129,.28); } }
         @keyframes floatUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        */
 
         /* #8 Carlos C — "Old is Gold": vintage gold plate, sepia photo, serif italics */
         .sup-carlos { --card-bg: linear-gradient(145deg, #a06a00, #ffe08a 42%, #c48a1a 70%, #7a4d00); --card-fg: #1f1200; --ring: conic-gradient(#fff1b0, #b07a12, #ffd86b, #7a4d00, #fff1b0); --pic-bg: #f2d48b; border-radius: 16px; outline: 2px solid rgba(255,255,255,.6); outline-offset: -10px; }
@@ -1171,6 +1169,66 @@
         }
         .vc-msg { font-weight: 800; color: #3a3260; font-size: clamp(.9rem, 2.8vw, 1.05rem); max-width: 36ch; }
         .vc-note { font-size: .68rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .5; }
+
+        /* =========================================================
+           ✏️ NOTES WALL (guestbook)
+           ========================================================= */
+        #guestbook { scroll-margin-top: 90px; }
+        .gb-form-card { max-width: 680px; margin: 0 auto; position: relative; }
+        .gb-form-body { padding: clamp(1rem, 3vw, 1.6rem); background: var(--pink-l); }
+        .gb-form-body form { display: flex; flex-direction: column; gap: 1.1rem; }
+        .gb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .gb-send { align-self: center; min-width: 14rem; justify-content: center; }
+        .gb-send:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+        .gb-sending { display: inline-flex; align-items: center; gap: .55rem; }
+        .gb-hint, .gb-lock, .gb-formmsg { text-align: center; font-weight: 700; font-size: .88rem; color: #3a3260; }
+        .gb-lock { background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; padding: .7rem 1rem; box-shadow: 3px 3px 0 var(--ink); }
+        .gb-formmsg { border: 3px solid var(--ink); border-radius: 16px; padding: .7rem 1rem; box-shadow: 3px 3px 0 var(--ink); }
+        .gb-formmsg.is-ok { background: #c8f3d8; }
+        .gb-formmsg.is-bad { background: #ffd0c8; }
+
+        /* loading animation: a spinning sparkle + bouncing dots + soft placeholder notes (transform/opacity only = smooth on phones) */
+        .gb-spark { width: 1.3rem; height: 1.3rem; flex: none; animation: gbSpin 1.2s linear infinite; }
+        .gb-spark-big { width: 3.4rem; height: 3.4rem; filter: drop-shadow(0 4px 0 rgba(22,17,46,.35)); }
+        @keyframes gbSpin { to { transform: rotate(360deg); } }
+        .gb-loader { display: flex; flex-direction: column; align-items: center; gap: .9rem; padding: 2rem 0 .5rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; }
+        .gb-loader-top { display: flex; align-items: center; gap: 1rem; }
+        .gb-dots { display: inline-flex; gap: .4rem; }
+        .gb-dots i { width: .8rem; height: .8rem; border-radius: 50%; background: var(--cream); border: 3px solid var(--ink); animation: gbBounce 1s ease-in-out infinite; }
+        .gb-dots i:nth-child(2) { animation-delay: .15s; background: var(--yellow); }
+        .gb-dots i:nth-child(3) { animation-delay: .3s; background: var(--pink); }
+        @keyframes gbBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .gb-skel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; width: 100%; max-width: 760px; margin-top: .6rem; }
+        .gb-skel span { height: 110px; border: 3px dashed rgba(22,17,46,.5); border-radius: 16px; background: rgba(255,246,230,.55); animation: gbPulse 1.4s ease-in-out infinite; }
+        .gb-skel span:nth-child(2) { animation-delay: .2s; } .gb-skel span:nth-child(3) { animation-delay: .4s; }
+        @media (max-width: 639px) { .gb-skel { grid-template-columns: minmax(0, 1fr); } .gb-skel span:nth-child(n+2) { display: none; } }
+        @keyframes gbPulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+
+        .gb-feed { margin-top: clamp(2rem, 5vw, 3.2rem); }
+        .gb-empty { text-align: center; font-weight: 800; padding: 1.4rem 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .gb-grid { display: grid; gap: clamp(1.2rem, 3vw, 1.8rem); grid-template-columns: minmax(0, 1fr); margin-top: 1.4rem; }
+        @media (min-width: 640px) { .gb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 1024px) { .gb-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        .gb-note {
+            position: relative; display: flex; flex-direction: column; gap: .7rem; min-width: 0;
+            background: var(--cream); color: var(--ink); border: 4px solid var(--ink); border-radius: 18px;
+            padding: 1.5rem 1.2rem 1.1rem; box-shadow: 6px 7px 0 var(--ink);
+        }
+        @media (min-width: 768px) {
+            .gb-note:nth-child(3n+1) { transform: rotate(-1.4deg); } .gb-note:nth-child(3n+2) { transform: rotate(1deg); } .gb-note:nth-child(3n) { transform: rotate(-.6deg); }
+        }
+        .gb-note:nth-child(4n+1) { background: #fff6e6; } .gb-note:nth-child(4n+2) { background: #ffe8f1; }
+        .gb-note:nth-child(4n+3) { background: #fff3c9; } .gb-note:nth-child(4n) { background: #e2f6f3; }
+        .gb-note.is-pending { border-style: dashed; background: #fffbe6; }
+        .gb-note.is-rejected { border-style: dashed; background: #f1e3e3; opacity: .85; }
+        .gb-pin { position: absolute; left: 50%; top: -15px; transform: translateX(-50%) rotate(-8deg); font-size: 1.5rem; filter: drop-shadow(0 3px 0 rgba(22,17,46,.4)); }
+        .gb-badge { align-self: flex-start; background: var(--yellow); border: 3px solid var(--ink); border-radius: 999px; padding: .2rem .7rem; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .gb-badge.is-bad { background: var(--pink); }
+        .gb-text { font-weight: 700; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+        .gb-sub { font-size: .78rem; font-weight: 700; color: #6a5f93; line-height: 1.45; }
+        .gb-meta { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; margin-top: auto; padding-top: .7rem; border-top: 3px dotted rgba(22,17,46,.25); }
+        .gb-name { font-family: 'Dela Gothic One', 'Arial Black', sans-serif; text-transform: uppercase; font-size: .9rem; overflow-wrap: anywhere; min-width: 0; }
+        .gb-date { font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .55; flex: none; }
     </style>
 </head>
 <body class="antialiased" x-data="gameSystem()"
@@ -1786,6 +1844,82 @@
             </div>
         </section>
 
+        <!-- ===================== GUESTBOOK (notes wall) =====================
+             Visitors leave one note every 7 days. A new note is saved to a Google Sheet (via Google Apps Script)
+             as "Pending" and only the sender sees it, as a preview. When it is set to "Approved" in the sheet,
+             it appears for everyone. Setup: see guestbook.gs + README.md. Paste the Web app URL into GUESTBOOK.url (script, bottom of file). -->
+        <section id="guestbook" aria-labelledby="gb-title" x-data="guestbook()">
+            <div class="text-center mb-10 md:mb-14" data-aos="zoom-out">
+                <h2 id="gb-title" class="stack-title st-lg">Notes Wall</h2>
+                <p class="mt-10 font-extrabold text-xs md:text-sm tracking-[0.3em] uppercase opacity-70">Leave a little note for Matty 💌</p>
+            </div>
+
+            <article class="info-card bar-yellow gb-form-card" data-aos="fade-up">
+                <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="win-title">notes.exe</span></div>
+                <div class="gb-form-body">
+                    <form @submit.prevent="addMessage()" novalidate>
+                        <div class="gb-field">
+                            <label class="cm-label" for="gb-name">Your name</label>
+                            <input id="gb-name" class="cm-input" type="text" maxlength="24" autocomplete="nickname" placeholder="Who's waving hello?" x-model="name" :disabled="locked || !configured || sending">
+                        </div>
+                        <div class="gb-field">
+                            <label class="cm-label" for="gb-message">Your note</label>
+                            <textarea id="gb-message" class="cm-input" rows="3" maxlength="240" placeholder="Say something sweet, funny or just hi…" x-model="message" :disabled="locked || !configured || sending"></textarea>
+                            <span class="cm-count" aria-hidden="true"><span x-text="message.length"></span>/240</span>
+                        </div>
+                        <!-- honeypot: real people never see or fill this -->
+                        <div class="gb-hp" aria-hidden="true"><label>Website <input type="text" tabindex="-1" autocomplete="off" x-model="website"></label></div>
+
+                        <button type="submit" class="btn-chunky btn-orange gb-send" :disabled="locked || !configured || sending" :aria-busy="sending">
+                            <span x-show="!sending">SEND TO THE WALL 💌</span>
+                            <span x-show="sending" x-cloak class="gb-sending"><svg class="gb-spark" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg> SENDING…</span>
+                        </button>
+
+                        <p class="gb-hint" x-show="configured && !locked && !formMsg">One note per person every 7 days, so make it a good one! ✨</p>
+                        <p class="gb-hint" x-show="!configured" x-cloak>The notes wall is still being set up. Check back soon! 🛠️</p>
+                        <p class="gb-lock" x-show="locked" x-cloak role="status">
+                            <span aria-hidden="true">🕊️</span> Your note is already on its way! You can write another one in <strong x-text="daysLeft"></strong> <span x-text="daysLeft === 1 ? 'day' : 'days'"></span>.
+                        </p>
+                        <p class="gb-formmsg" :class="formKind === 'ok' ? 'is-ok' : 'is-bad'" x-show="formMsg" x-cloak role="status" aria-live="polite" x-text="formMsg"></p>
+                    </form>
+                </div>
+            </article>
+
+            <div class="gb-feed" :aria-busy="loading">
+                <div class="gb-loader" x-show="loading && configured" x-cloak role="status" aria-live="polite">
+                    <div class="gb-loader-top">
+                        <svg class="gb-spark gb-spark-big" viewBox="0 0 100 100" aria-hidden="true"><use href="#spark"/></svg>
+                        <span class="gb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                    </div>
+                    <p>Delivering the mail…</p>
+                    <div class="gb-skel" aria-hidden="true"><span></span><span></span><span></span></div>
+                </div>
+
+                <div class="gb-empty" x-show="!loading && loadFailed" x-cloak role="status">
+                    <p>Oops, the mail truck got lost on the way 🚚</p>
+                    <button type="button" class="btn-chunky btn-cream" @click="loadMessages()">TRY AGAIN ↻</button>
+                </div>
+                <p class="gb-empty" x-show="!loading && !loadFailed && configured && items.length === 0" x-cloak>The wall is empty… be the first to leave a note! 🌟</p>
+
+                <div class="gb-grid">
+                    <template x-for="n in visibleItems" :key="n.id">
+                        <article class="gb-note" :class="'is-' + n.kind">
+                            <span class="gb-pin" aria-hidden="true">📌</span>
+                            <span class="gb-badge" x-show="n.kind === 'pending'">⏳ Preview · pending review</span>
+                            <span class="gb-badge is-bad" x-show="n.kind === 'rejected'">🙈 Wasn't approved</span>
+                            <p class="gb-text" x-text="n.message"></p>
+                            <p class="gb-sub" x-show="n.kind === 'pending'">Only you can see this for now. It's waiting for a quick look from the team.</p>
+                            <p class="gb-sub" x-show="n.kind === 'rejected'">Sorry, this one didn't make it to the wall. It will disappear from your device soon.</p>
+                            <footer class="gb-meta"><span class="gb-name" x-text="n.name"></span><time class="gb-date" x-text="fmt(n.ts)"></time></footer>
+                        </article>
+                    </template>
+                </div>
+                <div class="text-center" x-show="items.length > shown" x-cloak>
+                    <button type="button" class="btn-chunky btn-cream" @click="shown += pageSize">MORE NOTES ⬇️</button>
+                </div>
+            </div>
+        </section>
+
         <!-- ===================== VISITOR COUNTER =====================
              ✏️ Counts each device once, using the free Abacus counting service. Change the
              namespace/key in VISITOR_COUNTER (script at the bottom) — set enabled:false to hide it. -->
@@ -1940,7 +2074,8 @@
             { name: 'Honda',            desc: 'He can diagnose a bad mood from across the room 🩺',                        img: '', theme: 'honda',       badge: '🩺' },
             { name: 'Moudir',           desc: 'He\'s the reason every video drops right on time 🎬',                       img: '', theme: 'moudir',      badge: '🎬' },
             { name: 'Bandar',           desc: 'He brings snacks nobody asked for but everybody needed 🍭',                 img: '', theme: 'bandar',      badge: '🍭' },
-            { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
+            // 💤 lobo is hidden for now — delete the "// " at the start of the next line to bring him back
+            // { name: 'lobo',             desc: 'He remembers everyone\'s birthday before they do 💚',                       img: '', theme: 'lobo',        badge: '💚' },
             { name: 'Carlos C',         desc: 'He\'s been the coolest one in the room since before it was cool 🪙',        img: '', theme: 'carlos',      badge: '🪙' },
             { name: 'Aiden R',          desc: 'He shows up late and somehow still steals the whole show 🏆',               img: '', theme: 'aiden',       badge: '🏆' },
             { name: 'Christopher.Jay',  desc: 'He checks the mirror twice, just to be sure he\'s still this pretty 🌸',    img: '', theme: 'christopher', badge: '🌸' },
@@ -2465,6 +2600,128 @@
                     const t0 = performance.now(), dur = 1400;
                     const step = (t) => { const p = Math.min(1, (t - t0) / dur); this.shown = Math.round(target * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); else finish(); };
                     requestAnimationFrame(step);
+                }
+            };
+        }
+
+        /* =========================================================
+           ✏️ NOTES WALL (guestbook) — talks to a Google Apps Script web app that stores
+           notes in a Google Sheet (see guestbook.gs). Paste your Web app URL below.
+           • a new note is saved as "Pending" and shown ONLY to its sender (preview)
+           • when you set its status to "Approved" in the sheet, everyone sees it
+           • one note per person every cooldownDays days; a rejected note stays visible to
+             its sender for rejectedShowHours hours, then disappears from their device
+           ========================================================= */
+        const GUESTBOOK = {
+            url: 'https://script.google.com/macros/s/AKfycbxdC8IbSU35NFaX3ha2a_8wlYH9nYlNquEfeQmjWCGhpm7rCehqXnRLVdAxveiChSUV/exec',               // ✏️ paste your Apps Script Web app URL here (ends with /exec)
+            cooldownDays: 7,
+            rejectedShowHours: 24,
+            pageSize: 24
+        };
+        function guestbook() {
+            const KEY = { dev: 'matty-gb-device', mine: 'matty-gb-mine', last: 'matty-gb-last' }, DAY = 86400000;
+            const store = {
+                get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked: the server still enforces the limit */ } }
+            };
+            const clean = (s) => String(s || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+            const LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|io|ly|me|gg|co)\b)/i;
+            const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+            return {
+                configured: !!GUESTBOOK.url, pageSize: GUESTBOOK.pageSize, shown: GUESTBOOK.pageSize,
+                loading: !!GUESTBOOK.url, loadFailed: false, sending: false,
+                publicMsgs: [], mine: [], lastSent: 0, deviceId: '', draftId: null,
+                name: '', message: '', website: '', formMsg: '', formKind: '',
+
+                init() {
+                    let d = store.get(KEY.dev); if (!d) { d = uid(); store.set(KEY.dev, d); } this.deviceId = d;
+                    try { this.mine = JSON.parse(store.get(KEY.mine) || '[]').filter((m) => m && m.id); } catch (e) { this.mine = []; }
+                    this.lastSent = Number(store.get(KEY.last)) || 0;
+                    if (this.configured) this.loadMessages();
+                },
+                get daysLeft() { const left = this.lastSent + GUESTBOOK.cooldownDays * DAY - Date.now(); return left > 0 ? Math.ceil(left / DAY) : 0; },
+                get locked() { return this.daysLeft > 0; },
+                get items() {
+                    const list = this.publicMsgs.map((m) => ({ id: m.id, name: m.name, message: m.message, ts: m.ts, kind: 'public' }));
+                    this.mine.forEach((m) => list.push({ id: m.id, name: m.name, message: m.message, ts: m.ts, kind: m.rejectedAt ? 'rejected' : (m.approved ? 'public' : 'pending') }));
+                    return list.sort((a, b) => b.ts - a.ts);
+                },
+                get visibleItems() { return this.items.slice(0, this.shown); },
+                fmt(ts) { return ts ? new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; },
+                saveMine() { store.set(KEY.mine, JSON.stringify(this.mine)); },
+
+                // GET helper (list / status)
+                async api(action, params) {
+                    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+                    try {
+                        const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+                        const r = await fetch(GUESTBOOK.url + (GUESTBOOK.url.includes('?') ? '&' : '?') + qs, { signal: ctl.signal, cache: 'no-store' });
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const d = await r.json();
+                        if (!d || !d.ok) throw new Error('bad response');
+                        return d;
+                    } finally { clearTimeout(t); }
+                },
+                // 📥 loadMessages — fetches the approved notes (and refreshes the status of this visitor's own pending note)
+                async loadMessages() {
+                    if (!this.configured) return;
+                    this.loading = true; this.loadFailed = false;
+                    try {
+                        const d = await this.api('list');
+                        this.publicMsgs = (d.messages || []).map((m) => ({ id: String(m.id), name: String(m.name), message: String(m.message), ts: Date.parse(m.date) || 0 }));
+                        await this.syncMine();
+                    } catch (e) { this.loadFailed = true; }
+                    this.loading = false;
+                },
+                // keeps the sender's own preview in sync with the sheet
+                async syncMine() {
+                    const pub = new Set(this.publicMsgs.map((m) => m.id)), now = Date.now();
+                    let mine = this.mine.filter((m) => !pub.has(m.id)); // approved and now public → drop the local copy
+                    mine = mine.filter((m) => now - m.ts < 30 * DAY && !(m.rejectedAt && now - m.rejectedAt > GUESTBOOK.rejectedShowHours * 3600000));
+                    const check = mine.filter((m) => !m.rejectedAt && !m.approved).map((m) => m.id);
+                    if (check.length) {
+                        try {
+                            const s = (await this.api('status', { ids: check.join(',') })).statuses || {};
+                            mine.forEach((m) => { const st = s[m.id]; if (st === 'rejected' && !m.rejectedAt) m.rejectedAt = now; else if (st === 'approved') m.approved = true; });
+                            mine = mine.filter((m) => s[m.id] !== 'unknown'); // deleted from the sheet
+                        } catch (e) { /* keep the preview; try again next visit */ }
+                    }
+                    this.mine = mine; this.saveMine();
+                },
+                setForm(kind, text) { this.formKind = kind; this.formMsg = text; },
+                // 📤 addMessage — validates, sends the note to the sheet (as Pending) and shows it to the sender as a preview
+                async addMessage() {
+                    if (this.sending || this.locked || !this.configured) return;
+                    const name = clean(this.name).slice(0, 24), message = clean(this.message).slice(0, 240);
+                    if (!name || message.length < 2) { this.setForm('bad', 'Please add your name and a note (at least 2 characters) 🙏'); return; }
+                    if (LINK_RE.test(name) || LINK_RE.test(message)) { this.setForm('bad', "Links aren't allowed on the wall 🙈 Just words, please!"); return; }
+                    this.sending = true; this.setForm('', '');
+                    if (!this.draftId) this.draftId = uid(); // same id on retries, so a note can never be saved twice
+                    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+                    try {
+                        const r = await fetch(GUESTBOOK.url, {
+                            method: 'POST', redirect: 'follow', signal: ctl.signal,
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // "simple" request: no CORS pre-flight needed
+                            body: JSON.stringify({ action: 'add', id: this.draftId, device: this.deviceId, name, message, website: this.website })
+                        });
+                        const d = await r.json();
+                        if (d && d.ok) {
+                            this.mine.unshift({ id: this.draftId, name, message, ts: Date.now() }); this.saveMine();
+                            this.lastSent = Date.now(); store.set(KEY.last, String(this.lastSent));
+                            this.draftId = null; this.name = ''; this.message = '';
+                            this.setForm('ok', "Sent! 🎉 Your note is on the wall as a preview. It'll go public once it gets a quick look.");
+                            cf({ particleCount: 80, spread: 75, origin: { y: 0.7 } });
+                        } else if (d && d.error === 'cooldown') {
+                            const left = Math.max(1, Number(d.days) || GUESTBOOK.cooldownDays);
+                            this.lastSent = Date.now() - (GUESTBOOK.cooldownDays - left) * DAY; store.set(KEY.last, String(this.lastSent));
+                            this.setForm('bad', 'You already sent a note recently 🕊️ Come back in ' + left + (left === 1 ? ' day!' : ' days!'));
+                        } else if (d && d.error === 'links') { this.setForm('bad', "Links aren't allowed on the wall 🙈 Just words, please!");
+                        } else if (d && d.error === 'invalid') { this.setForm('bad', 'Hmm, that note looks a bit off. Check your name and message 🙏');
+                        } else if (d && d.error === 'busy') { this.setForm('bad', 'The wall is super busy right now 🎢 Please try again in a little while.');
+                        } else { this.setForm('bad', 'Oops, the mail truck got lost 🚚 Please try again in a moment.'); }
+                    } catch (e) {
+                        this.setForm('bad', 'Oops, the mail truck got lost 🚚 Please check your connection and try again.');
+                    } finally { clearTimeout(t); this.sending = false; }
                 }
             };
         }
