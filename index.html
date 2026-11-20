@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matty's Birthday Countdown</title>
+<meta name="description" content="A live countdown to Matty's birthday on December 29.">
+<meta name="theme-color" content="#6b4fe0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16112e;--cream:#fff6e6;--orange:#ff7a2f;--yellow:#ffd23f;--teal:#1ebeaf;--pink:#ff69b4;--purple:#6b4fe0;--purple-d:#4d36b8;}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--cream);background:
+  repeating-conic-gradient(var(--purple) 0 25%,var(--purple-d) 0 50%) 0 0/110px 110px;
+  display:flex;flex-direction:column;overflow-x:hidden;position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(70% 60% at 50% 35%,transparent 40%,rgba(22,17,46,.55));pointer-events:none}
+@media (prefers-reduced-motion:no-preference){body{animation:bgMove 24s linear infinite}@keyframes bgMove{to{background-position:0 0,220px 110px}}}
+.top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:14px clamp(14px,4vw,32px)}
+.back{display:inline-flex;gap:.5rem;align-items:center;padding:.6rem 1.1rem;border:3px solid var(--ink);border-radius:999px;background:var(--cream);color:var(--ink);font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;box-shadow:4px 4px 0 var(--ink);transition:transform .2s cubic-bezier(.2,.9,.3,1.6),box-shadow .2s}
+.back:hover,.back:focus-visible{transform:translate(-2px,-2px) rotate(-1.5deg);box-shadow:7px 7px 0 var(--ink);outline:none}
+.logo{font-family:'Dela Gothic One',sans-serif;font-size:1.5rem;text-shadow:3px 3px 0 var(--ink)}
+main{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1rem clamp(14px,4vw,32px) 3rem;gap:clamp(1.2rem,3.5vw,2.2rem)}
+.kicker{font-weight:800;font-size:clamp(10px,2.6vw,13px);letter-spacing:.34em;text-transform:uppercase;background:var(--ink);color:var(--yellow);padding:.55rem 1.1rem;border-radius:999px;transform:rotate(-2deg)}
+h1{font-family:'Dela Gothic One',sans-serif;font-weight:400;line-height:.98;font-size:clamp(2.6rem,11vw,6.6rem);color:var(--cream);text-shadow:3px 3px 0 var(--teal),6px 6px 0 var(--pink),9px 9px 0 var(--yellow),12px 12px 0 var(--orange),15px 15px 0 var(--ink)}
+h1 span{display:block}
+.sub{font-weight:700;font-size:clamp(.95rem,2.8vw,1.2rem);max-width:34ch;opacity:.95;text-shadow:0 2px 0 rgba(22,17,46,.5)}
+.timer{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(.55rem,2vw,1.2rem);width:min(100%,780px)}
+.cell{position:relative;background:var(--cream);color:var(--ink);border:4px solid var(--ink);border-radius:clamp(16px,3vw,26px);padding:clamp(.8rem,3vw,1.5rem) .3rem clamp(.6rem,2vw,1rem);box-shadow:6px 6px 0 var(--ink);transition:transform .25s cubic-bezier(.2,.9,.3,1.6)}
+.cell:nth-child(1){background:var(--yellow)}.cell:nth-child(2){background:var(--pink)}.cell:nth-child(3){background:#7fe7dc}.cell:nth-child(4){background:var(--orange)}
+.cell:hover{transform:translateY(-6px) rotate(-1.5deg)}
+.num{display:block;font-family:'Dela Gothic One',sans-serif;font-size:clamp(1.9rem,9vw,4.4rem);line-height:1;font-variant-numeric:tabular-nums}
+.num.tick{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}@keyframes pop{0%{transform:scale(.8) translateY(8px)}100%{transform:none}}
+.lab{display:block;margin-top:.45rem;font-weight:800;font-size:clamp(8px,2.2vw,12px);letter-spacing:.2em;text-transform:uppercase}
+.date{font-weight:800;font-size:clamp(11px,2.8vw,14px);letter-spacing:.22em;text-transform:uppercase}
+.date b{color:var(--yellow)}
+.party{display:none}
+.is-today .party{display:block}.is-today .timer,.is-today .sub.wait{display:none}
+.is-today h1 span.n{animation:wob 1.4s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(-2deg) scale(1.03)}}
+.sub.today{display:none;font-size:clamp(1.1rem,3.4vw,1.5rem)}.is-today .sub.today{display:block}
+.pb{width:min(100%,560px);margin-top:.2rem}
+.pb .track{height:18px;border:3px solid var(--ink);border-radius:999px;background:var(--cream);overflow:hidden;box-shadow:4px 4px 0 var(--ink)}
+.pb .fill{height:100%;width:0;background:repeating-linear-gradient(-45deg,var(--orange) 0 12px,var(--yellow) 12px 24px);border-right:3px solid var(--ink);transition:width 1.2s cubic-bezier(.2,.9,.3,1)}
+.pb p{margin-top:.6rem;font-weight:800;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.9}
+.float{position:fixed;z-index:1;font-size:clamp(1.6rem,5vw,3rem);pointer-events:none;bottom:-12%;animation:rise var(--d,14s) linear var(--s,0s) infinite;opacity:0;filter:drop-shadow(0 4px 0 rgba(22,17,46,.35))}
+@keyframes rise{0%{transform:translateY(0) rotate(-8deg);opacity:0}10%{opacity:.95}90%{opacity:.95}100%{transform:translateY(-115vh) rotate(12deg);opacity:0}}
+.tape{position:relative;z-index:2;overflow:hidden;background:var(--ink);color:var(--yellow);border-block:4px solid var(--ink);box-shadow:0 -5px 0 var(--orange);margin-top:auto}
+.tape div{display:flex;width:max-content;padding:.7rem 0;font-family:'Dela Gothic One',sans-serif;font-size:clamp(.8rem,2.4vw,1rem);letter-spacing:.14em;text-transform:uppercase;animation:tape 24s linear infinite}
+.tape span{padding:0 1.3rem;white-space:nowrap}.tape span:nth-child(even){color:var(--cream)}
+@keyframes tape{to{transform:translateX(-50%)}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+a:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.float{display:none}.tape div{flex-wrap:wrap;width:auto;justify-content:center}}
+</style>
+</head>
+<body>
+<header class="top">
+  <!-- ✏️ EDIT: where the back button goes (your main site) -->
+  <a class="back" href="index.html" aria-label="Back to Matty's site"><span aria-hidden="true">←</span> Back to site</a>
+  <span class="logo" aria-hidden="true">MATTY</span>
+</header>
+
+<main id="app">
+  <p class="kicker" id="kick">🎂 Something big is coming</p>
+  <h1><span>Matty's</span><span class="n">Birthday</span></h1>
+  <p class="sub wait" id="sub">The countdown is on. Every second gets us closer to the party.</p>
+  <p class="sub today">🎉 It's today! Happy Birthday, Matty! 🎉</p>
+
+  <div class="timer" id="timer" role="timer" aria-label="Time left until Matty's birthday">
+    <div class="cell"><span class="num" id="d">00</span><span class="lab">Days</span></div>
+    <div class="cell"><span class="num" id="h">00</span><span class="lab">Hours</span></div>
+    <div class="cell"><span class="num" id="m">00</span><span class="lab">Minutes</span></div>
+    <div class="cell"><span class="num" id="s">00</span><span class="lab">Seconds</span></div>
+  </div>
+  <p class="sr-only" id="say" aria-live="polite"></p>
+
+  <p class="date" id="date">December <b>29</b></p>
+
+  <div class="pb" id="pb">
+    <div class="track" role="progressbar" aria-label="Progress to the next birthday" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+    <p id="pbt">Loading…</p>
+  </div>
+</main>
+
+<div class="tape" aria-hidden="true"><div id="tape"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
+<script>
+/* ✏️ EDIT: Matty's birthday (month 1-12, day). Counts down in each visitor's own local time. */
+var BIRTHDAY = { month: 12, day: 29 };
+/* Test helpers: add ?today=1 to preview the party screen, or ?date=2026-12-28T23:59:50 to preview any moment. */
+
+(function () {
+  var q = new URLSearchParams(location.search);
+  var fake = q.get('date') ? new Date(q.get('date')).getTime() : null;
+  var t0 = Date.now();
+  function now() { return fake ? fake + (Date.now() - t0) : Date.now(); }
+  var reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var $ = function (id) { return document.getElementById(id); };
+  var MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var last = {}, partyShown = false;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function setNum(id, v) { var el = $(id); if (last[id] !== v) { el.textContent = v; last[id] = v; if (!reduced) { el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); } } }
+  function target(d) {  // next birthday start (00:00 local) that is not already over today
+    var y = d.getFullYear(), t = new Date(y, BIRTHDAY.month - 1, BIRTHDAY.day);
+    var end = new Date(y, BIRTHDAY.month - 1, BIRTHDAY.day + 1);
+    if (d >= end) t = new Date(y + 1, BIRTHDAY.month - 1, BIRTHDAY.day);
+    return t;
+  }
+  function tick() {
+    var d = new Date(now()), isToday = q.get('today') === '1' || (d.getMonth() === BIRTHDAY.month - 1 && d.getDate() === BIRTHDAY.day);
+    var t = target(d), diff = Math.max(0, t - d);
+    document.body.classList.toggle('is-today', isToday);
+    $('kick').textContent = isToday ? '🎂 The big day is here' : '🎂 Something big is coming';
+    var days = Math.floor(diff / 864e5), h = Math.floor(diff / 36e5) % 24, m = Math.floor(diff / 6e4) % 60, s = Math.floor(diff / 1e3) % 60;
+    setNum('d', pad(days)); setNum('h', pad(h)); setNum('m', pad(m)); setNum('s', pad(s));
+    $('date').innerHTML = MON[BIRTHDAY.month - 1] + ' <b>' + BIRTHDAY.day + '</b>, ' + t.getFullYear();
+    // progress through the last year before the birthday
+    var prev = new Date(t.getFullYear() - 1, BIRTHDAY.month - 1, BIRTHDAY.day), pct = isToday ? 100 : Math.min(100, Math.max(0, (d - prev) / (t - prev) * 100));
+    $('fill').style.width = pct.toFixed(2) + '%';
+    $('pb').querySelector('[role=progressbar]').setAttribute('aria-valuenow', Math.round(pct));
+    $('pbt').textContent = isToday ? 'Party mode: 100%' : pct.toFixed(1) + '% of the way to the next birthday';
+    if (s === 0 || !last.say) { $('say').textContent = isToday ? "It's Matty's birthday today!" : days + ' days, ' + h + ' hours and ' + m + ' minutes until Matty\'s birthday.'; last.say = 1; }
+    if (isToday && !partyShown) { partyShown = true; party(); }
+    if (!isToday) partyShown = false;
+  }
+  function party() {
+    if (reduced || typeof confetti !== 'function') return;
+    var n = 0, id = setInterval(function () {
+      confetti({ particleCount: 70, spread: 80, origin: { x: Math.random(), y: Math.random() * .4 }, colors: ['#ffd23f', '#ff69b4', '#1ebeaf', '#ff7a2f', '#fff6e6'] });
+      if (++n > 6) clearInterval(id);
+    }, 380);
+  }
+  // floating balloons / stars
+  var E = ['🎈', '🎂', '✨', '🎁', '🎉', '⭐', '🎈', '🪩', '🥳'];
+  for (var i = 0; i < 12; i++) {
+    var f = document.createElement('span'); f.className = 'float'; f.textContent = E[i % E.length]; f.setAttribute('aria-hidden', 'true');
+    f.style.left = (4 + (i * 8.2) % 92) + '%'; f.style.setProperty('--d', (11 + (i * 1.7) % 9) + 's'); f.style.setProperty('--s', (-(i * 1.9)) + 's');
+    document.body.appendChild(f);
+  }
+  // ticker
+  var words = ['Happy Birthday Matty', 'Countdown is live', 'Cake loading', 'Presents incoming', 'Dec 29'], h = '';
+  for (var k = 0; k < 2; k++) for (var j = 0; j < words.length; j++) h += '<span>' + words[j] + ' ✦</span>';
+  $('tape').innerHTML = h + h;
+  tick(); setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', tick);
+})();
+</script>
+</body>
+</html>
