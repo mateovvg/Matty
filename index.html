@@ -2917,8 +2917,8 @@
         <div class="cv cv-top" aria-hidden="true"><span>The only magazine about one person</span><span>No.001 · SS/26</span><span>Free · 100% cute</span></div>
         <div class="cv cv-tag" aria-hidden="true">The cute and the only cute</div>
         <div class="cv cv-hero">
-            <!-- ✏️ EDIT: Matty's cartoon on the cover. Any transparent PNG/WebP works (best ~3:4, e.g. 840x1120; current file: images/cover/matty-cutout.webp). Change src (and alt) to swap the picture. -->
-            <img src="images/cover/matty-cutout.webp" alt="Matty smiling and flashing a peace sign in front of a fairytale castle and carousel" width="840" height="1120" decoding="async" fetchpriority="high">
+            <!-- ✏️ EDIT: Matty's cartoon on the cover. Just upload a file named images/cover/matty-cutout.(webp|png|jpg|jpeg|avif|gif|svg) — ANY image format works, the page finds it by itself. Best: transparent PNG/WebP/AVIF ~3:4 (e.g. 840x1120); a JPG works too but keeps its background. To use another file name, change src + data-img-base. -->
+            <img src="images/cover/matty-cutout.webp" data-img-base="images/cover/matty-cutout" alt="Matty smiling and flashing a peace sign in front of a fairytale castle and carousel" width="840" height="1120" decoding="async" fetchpriority="high">
         </div>
         <aside class="cv cv-l" aria-label="Cover story">
             <div class="cv-card cv-story"><span class="cv-lab">Cover story</span><b class="cv-h"><span class="cv-nrm">Everything about Matty</span><span class="cv-bd">Happy Birthday, Matty!</span></b></div>
@@ -2949,17 +2949,17 @@
             <span class="act-tag">👋 Who is this legend?</span>
         </div>
 
-        <!-- ================= 🖼️ CENTERFOLD POSTER (✏️ swap images/cover/matty-poster.webp for another picture) ================= -->
+        <!-- ================= 👋 WELCOME + POSTER (✏️ swap the poster: drop a file named images/cover/matty-poster.(webp|png|jpg|jpeg|avif|gif|svg) — any format works; edit the welcome words below) ================= -->
         <section id="poster" class="poster-sec" aria-labelledby="poster-title">
             <figure class="poster-fig" data-aos="fade-up">
-                <a class="poster-frame" href="images/cover/matty-poster.webp" target="_blank" rel="noopener" aria-label="Open the centerfold poster full size (opens in a new tab)">
-                    <img src="images/cover/matty-poster.webp" alt="Illustrated poster of Matty smiling and flashing a peace sign in front of a colourful fairytale castle and a carousel" width="1500" height="1997" loading="lazy" decoding="async">
+                <a class="poster-frame" href="images/cover/matty-poster.webp" target="_blank" rel="noopener" aria-label="Open the poster full size (opens in a new tab)">
+                    <img src="images/cover/matty-poster.webp" data-img-base="images/cover/matty-poster" alt="Illustrated poster of Matty smiling and flashing a peace sign in front of a colourful fairytale castle and a carousel" width="1500" height="1997" loading="lazy" decoding="async">
                 </a>
                 <figcaption class="poster-cap">
-                    <span class="poster-lab">The centerfold</span>
-                    <h2 id="poster-title" class="poster-h">Poster of the issue</h2>
-                    <p class="poster-p">Fold it out, pin it up. A paper-cut portrait of Matty, drawn just for this page.</p>
-                    <a class="poster-btn" href="images/cover/matty-poster.webp" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a>
+                    <span class="poster-lab">Welcome</span>
+                    <h2 id="poster-title" class="poster-h">Welcome to Matty’s world</h2>
+                    <p class="poster-p">Glad you stopped by! Scroll down to meet Matty, see where he’s been, hang out with the crowd and play a few games. Make yourself at home.</p>
+                    <a class="poster-btn" href="images/cover/matty-poster.webp" target="_blank" rel="noopener">See the poster <span aria-hidden="true">↗</span></a>
                 </figcaption>
             </figure>
         </section>
@@ -7481,5 +7481,23 @@
     wrap.addEventListener('pointercancel', release);
 })();
 </script>
+    <script>
+    /* Any-format picture finder: an <img data-img-base="path/name"> tries name.webp (its own src), then .png .jpg .jpeg .avif .gif .svg, and keeps the first that loads. */
+    (function () {
+        var EXTS = ['webp', 'png', 'jpg', 'jpeg', 'avif', 'gif', 'svg', 'JPG', 'PNG', 'JPEG'];
+        function arm(img) {
+            var base = img.getAttribute('data-img-base'), i = 0;
+            if (!base) return;
+            img.addEventListener('error', function next() {
+                i++;
+                if (i >= EXTS.length) { img.removeEventListener('error', next); return; }
+                img.src = base + '.' + EXTS[i];
+            });
+            img.addEventListener('load', function () { var f = img.closest('.poster-fig'); if (f) Array.prototype.forEach.call(f.querySelectorAll('a'), function (l) { l.setAttribute('href', img.getAttribute('src')); }); });
+            if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) { i++; img.src = base + '.' + EXTS[i]; }
+        }
+        Array.prototype.forEach.call(document.querySelectorAll('img[data-img-base]'), arm);
+    })();
+    </script>
 </body>
 </html>
